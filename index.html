@@ -2575,6 +2575,10 @@
     grid-auto-columns: max-content; align-items: start; padding: 0;
   }
   .conversation-word-bank button { flex: 0 0 auto; white-space: nowrap; }
+  .conversation-word-choices button {
+    width: calc(var(--piece-length, 3) * 1em + 14px);
+    justify-self: start;
+  }
   body.test-mode.conversation-keyboard .test-answer-cell:has(.conversation-word-bank) > .test-answer-button:not(.revealed) { display: none; }
   .test-answer-cell:has(.test-answer-button.correct) .conversation-word-choices { display: none; }
   .test-answer-cell:has(.test-answer-button.correct) .conversation-word-bank {
@@ -6614,6 +6618,12 @@ function skipSpeechQuestion(target, transcript) {
   startNextSpeechQuestion(target);
 }
 
+function isPieceAnswerCorrect(transcript, answer, conversation = false) {
+  if (transcript === answer) return true;
+  return conversation && answer.startsWith("しゅうまつ は ") &&
+    transcript === answer.replace(/^しゅうまつ は /, "しゅうまつ ");
+}
+
 function gradeSpeechAnswer(target, onlyIfCorrect = false) {
   if (activeSpeechButton !== target) return false;
   const transcript = Array.from(activeSpeechSegments.values()).join("");
@@ -6624,7 +6634,7 @@ function gradeSpeechAnswer(target, onlyIfCorrect = false) {
     kanjiReadingMap = [];
   }
   const correct = target.dataset.answerSource === "words"
-    ? transcript === (target.dataset.wordAnswer || target.dataset.answer)
+    ? isPieceAnswerCorrect(transcript, target.dataset.wordAnswer || target.dataset.answer, target.dataset.conversation === "true")
     : isSpeechAnswerCorrect(
     transcript,
     getSpeechAnswersForButton(target),
@@ -6962,8 +6972,8 @@ function makeTestTable() {
       wordChoices = [correct, ...shuffleArray(alternatives).slice(0, 4)];
     }
     const orderedChoices = isConjugation && row.dataset.stemPiece ? [wordChoices[0], ...shuffleArray(wordChoices.slice(1))] : shuffleArray(wordChoices);
-    const wordBank = wordChoices.length ? `<div class="conversation-word-bank" data-answer-prefix="${escapeHtml(row.dataset.answerPrefix || "")}" role="group" aria-label="単語を選んで答える"><div class="conversation-selected-words" role="group" aria-label="選んだ単語">${escapeHtml(row.dataset.answerPrefix || "")}</div><div class="conversation-word-choices" role="group" aria-label="単語の選択肢">${orderedChoices.map((word, i) => `<button type="button" data-word-index="${i}" aria-pressed="false" onclick="chooseConversationWord(this)">${escapeHtml(word)}</button>`).join("")}</div></div>` : "";
-    return `<tr><td>${prompt.innerHTML}</td><td class="test-answer-cell"><button class="test-answer-button" type="button" data-answer="${escapeHtml(answer)}" data-answer-font-size="${escapeHtml(answerFontSize)}" data-word-answer="${escapeHtml(row.dataset.wordAnswer || "")}" data-stem-piece="${escapeHtml(row.dataset.stemPiece || "")}" data-answer-reading="${escapeHtml(answerReading)}" data-accepted-answers="${escapeHtml(acceptedAnswers)}" data-kanji-reading-map="${escapeHtml(JSON.stringify(kanjiReadingMap))}" data-conjugation="${isConjugation}" data-connect="${isConnect}" data-selected="false" aria-pressed="false" onclick="startSpeechTest(this)" aria-label="${index + 1}問目を音声で答える"><span class="test-transcript"></span><span class="test-status"></span></button>${wordBank}</td></tr>`;
+    const wordBank = wordChoices.length ? `<div class="conversation-word-bank" data-answer-prefix="${escapeHtml(row.dataset.answerPrefix || "")}" role="group" aria-label="単語を選んで答える"><div class="conversation-selected-words" role="group" aria-label="選んだ単語">${escapeHtml(row.dataset.answerPrefix || "")}</div><div class="conversation-word-choices" role="group" aria-label="単語の選択肢">${orderedChoices.map((word, i) => `<button type="button" data-word-index="${i}" style="--piece-length:${Math.max(3, Array.from(word).length)}" aria-pressed="false" onclick="chooseConversationWord(this)">${escapeHtml(word)}</button>`).join("")}</div></div>` : "";
+    return `<tr><td>${prompt.innerHTML}</td><td class="test-answer-cell"><button class="test-answer-button" type="button" data-answer="${escapeHtml(answer)}" data-answer-font-size="${escapeHtml(answerFontSize)}" data-word-answer="${escapeHtml(row.dataset.wordAnswer || "")}" data-stem-piece="${escapeHtml(row.dataset.stemPiece || "")}" data-answer-reading="${escapeHtml(answerReading)}" data-accepted-answers="${escapeHtml(acceptedAnswers)}" data-kanji-reading-map="${escapeHtml(JSON.stringify(kanjiReadingMap))}" data-conversation="${Boolean(conversationPracticeData[currentTableType])}" data-conjugation="${isConjugation}" data-connect="${isConnect}" data-selected="false" aria-pressed="false" onclick="startSpeechTest(this)" aria-label="${index + 1}問目を音声で答える"><span class="test-transcript"></span><span class="test-status"></span></button>${wordBank}</td></tr>`;
   }).join("");
   const timer = `<button class="test-timer-btn" id="testTimerBtn" type="button" aria-label="タイマー">${formatTestDuration(getTestDurationSeconds(selected.map(({ row }) => row)))}</button>`;
   document.getElementById("tableArea").innerHTML = `<table class="test-table"><tr><th>問題</th><th>あなたの答え</th></tr>${body}</table><button class="test-reveal-btn" type="button" onclick="revealTestAnswers()">答え</button>${timer}<div class="scroll-extra-y"></div>`;
@@ -9745,7 +9755,26 @@ function fitChallengeColumns(table) {
   });
   measurement.remove();
   const width = table.getBoundingClientRect().width;
-  table.style.setProperty("--challenge-prompt-width", `${Math.ceil(Math.min(longest + 2, width * 0.5))}px`);
+  const minimumLeft = Math.min(longest + 2, width * 0.5);
+  let neededRight = 0;
+  table.querySelectorAll(".conversation-word-choices").forEach(choices => {
+    if (choices.closest("td").querySelector('.test-answer-button.correct, .test-answer-button.revealed')) return;
+    const buttons = Array.from(choices.querySelectorAll("button"));
+    const columns = [];
+    buttons.forEach((button, index) => {
+      const fontSize = parseFloat(getComputedStyle(button).fontSize) || 16;
+      const pieceWidth = Math.max(3, Array.from(button.textContent).length) * fontSize + 14;
+      const column = Math.floor(index / 3);
+      columns[column] = Math.max(columns[column] || 0, pieceWidth);
+    });
+    const style = getComputedStyle(choices.closest("td"));
+    const padding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+    const gaps = Math.max(0, columns.length - 1) * (parseFloat(getComputedStyle(choices).columnGap) || 6);
+    neededRight = Math.max(neededRight, columns.reduce((sum, column) => sum + column, 0) + gaps + padding + 2);
+  });
+  const preferredLeft = Math.max(minimumLeft, width * 0.45);
+  const left = Math.max(minimumLeft, Math.min(preferredLeft, width - neededRight));
+  table.style.setProperty("--challenge-prompt-width", `${Math.ceil(left)}px`);
   table.querySelectorAll(".conversation-word-choices").forEach(fitPieceChoiceRows);
 }
 
