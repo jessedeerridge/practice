@@ -5363,7 +5363,7 @@ function saveTestResult(percent, reason, achievedAt = Date.now()) {
   const name = getSavedTestParticipantName();
   if (!name) return;
   const info = getTestModeInfo();
-  const result = { id: `${achievedAt}_${Math.random().toString(36).slice(2,8)}`, name, mode: info.mode, conjugation: info.conjugation, percent: Math.round(percent), reason, achievedAt };
+  const result = { id: `${achievedAt}_${Math.random().toString(36).slice(2,8)}`, name, homeLevel: currentHomeLevel, mode: info.mode, conjugation: info.conjugation, percent: Math.round(percent), reason, achievedAt };
   const results = readTestStorage(TEST_RESULTS_STORAGE_KEY, []);
   results.push(result);
   writeTestStorage(TEST_RESULTS_STORAGE_KEY, results.slice(-500));
