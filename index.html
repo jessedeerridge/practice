@@ -3203,6 +3203,14 @@ function makeConjugationPieces(row, answerReading) {
   return { words, choices: [...words, ...distractors], answer, stem };
 }
 
+function fitPieceChoiceRows(choices) {
+  if (!choices.clientWidth) return;
+  choices.style.gridTemplateRows = "repeat(2, max-content)";
+  if (choices.scrollWidth > choices.clientWidth + 1) {
+    choices.style.gridTemplateRows = "repeat(3, max-content)";
+  }
+}
+
 function chooseConversationWord(button) {
   if (testSessionEnded || !testParticipantConfirmed) return;
   if (testInputMode !== "keyboard") return;
@@ -3228,6 +3236,7 @@ function chooseConversationWord(button) {
     position === 0 ? [choices[i]] : [document.createTextNode(" "), choices[i]]
   ));
   choices.filter((_, i) => !selected.includes(i)).forEach(choice => choicesArea.appendChild(choice));
+  fitPieceChoiceRows(choicesArea);
   const transcript = selected.map(i => choices[i].textContent).join(" ");
   answerButton.dataset.answerSource = "words";
   setSpeechButtonMessage(answerButton, transcript);
@@ -6131,11 +6140,13 @@ function closeTestLikePopup() {
 
 function getTestDurationSeconds(questions) {
   if (usesPieceAnswers()) {
+    const extraSeconds = currentSection === "conjugation" ? 30
+      : currentSection === "conversation" ? questions.length * 2 : 20;
     return questions.reduce((total, question) => {
       const pieces = (question.dataset.wordAnswer || "").trim().split(/\s+/).filter(Boolean).length;
       const stemPieces = currentSection === "conjugation" && question.dataset.stemPiece ? 1 : 0;
       return total + Math.max(0, pieces - stemPieces);
-    }, 0) * 2.5 + (currentSection === "conjugation" ? 30 : 20);
+    }, 0) * 2.5 + extraSeconds;
   }
   return questions.length * 10 + 20;
 }
@@ -6625,7 +6636,14 @@ function gradeSpeechAnswer(target, onlyIfCorrect = false) {
 
   clearSpeechTimers();
   const wasCorrect = target.dataset.correct === "true";
-  if (correct) target.dataset.correct = "true";
+  if (correct) {
+    target.dataset.correct = "true";
+    if (target.dataset.answerFontSize) {
+      target.style.fontSize = target.dataset.answerFontSize;
+      const bank = target.parentElement.querySelector(".conversation-word-bank");
+      if (bank) bank.style.fontSize = target.dataset.answerFontSize;
+    }
+  }
   const staysCorrect = correct || wasCorrect;
   setSpeechButtonClass(target, staysCorrect ? "" : "incorrect");
   if (staysCorrect) target.querySelector(".test-transcript").textContent = target.dataset.answer;
@@ -6791,7 +6809,10 @@ function beginTestQuestions(mode) {
   startSpeechTestSession();
   startTestCountdown();
   document.body.classList.toggle("conversation-keyboard", usesPieceAnswers() && mode === "keyboard");
-  if (usesPieceAnswers() && mode === "keyboard") return;
+  if (usesPieceAnswers() && mode === "keyboard") {
+    document.querySelectorAll(".conversation-word-choices").forEach(fitPieceChoiceRows);
+    return;
+  }
   const firstQuestion = document.querySelector("#tableArea .test-answer-button");
   if (firstQuestion && mode === "keyboard") {
     // ソフトウェアキーボードは、ユーザー操作中に入力欄へ直接フォーカスしないと
@@ -6906,6 +6927,7 @@ function makeTestTable() {
       row,
       answer: getCellAnswerText(answerCell),
       answerReading: getCellAnswerReading(answerCell),
+      answerFontSize: getComputedStyle(answerCell.querySelector(".answer-text") || answerCell).fontSize,
       acceptedAnswers: row.dataset.acceptedAnswers || "[]"
     };
   });
@@ -6928,7 +6950,7 @@ function makeTestTable() {
       item.answerReading = pieces.answer;
     });
   }
-  const body = selected.map(({ row, answer, answerReading, acceptedAnswers }, index) => {
+  const body = selected.map(({ row, answer, answerReading, answerFontSize, acceptedAnswers }, index) => {
     const prompt = row.cells[0].cloneNode(true);
     prompt.querySelectorAll(".question-box").forEach(node => node.remove());
     const kanjiReadingMap = getCellKanjiReadingMap(row.cells[row.cells.length - 1]);
@@ -6941,7 +6963,7 @@ function makeTestTable() {
     }
     const orderedChoices = isConjugation && row.dataset.stemPiece ? [wordChoices[0], ...shuffleArray(wordChoices.slice(1))] : shuffleArray(wordChoices);
     const wordBank = wordChoices.length ? `<div class="conversation-word-bank" data-answer-prefix="${escapeHtml(row.dataset.answerPrefix || "")}" role="group" aria-label="単語を選んで答える"><div class="conversation-selected-words" role="group" aria-label="選んだ単語">${escapeHtml(row.dataset.answerPrefix || "")}</div><div class="conversation-word-choices" role="group" aria-label="単語の選択肢">${orderedChoices.map((word, i) => `<button type="button" data-word-index="${i}" aria-pressed="false" onclick="chooseConversationWord(this)">${escapeHtml(word)}</button>`).join("")}</div></div>` : "";
-    return `<tr><td>${prompt.innerHTML}</td><td class="test-answer-cell"><button class="test-answer-button" type="button" data-answer="${escapeHtml(answer)}" data-word-answer="${escapeHtml(row.dataset.wordAnswer || "")}" data-stem-piece="${escapeHtml(row.dataset.stemPiece || "")}" data-answer-reading="${escapeHtml(answerReading)}" data-accepted-answers="${escapeHtml(acceptedAnswers)}" data-kanji-reading-map="${escapeHtml(JSON.stringify(kanjiReadingMap))}" data-conjugation="${isConjugation}" data-connect="${isConnect}" data-selected="false" aria-pressed="false" onclick="startSpeechTest(this)" aria-label="${index + 1}問目を音声で答える"><span class="test-transcript"></span><span class="test-status"></span></button>${wordBank}</td></tr>`;
+    return `<tr><td>${prompt.innerHTML}</td><td class="test-answer-cell"><button class="test-answer-button" type="button" data-answer="${escapeHtml(answer)}" data-answer-font-size="${escapeHtml(answerFontSize)}" data-word-answer="${escapeHtml(row.dataset.wordAnswer || "")}" data-stem-piece="${escapeHtml(row.dataset.stemPiece || "")}" data-answer-reading="${escapeHtml(answerReading)}" data-accepted-answers="${escapeHtml(acceptedAnswers)}" data-kanji-reading-map="${escapeHtml(JSON.stringify(kanjiReadingMap))}" data-conjugation="${isConjugation}" data-connect="${isConnect}" data-selected="false" aria-pressed="false" onclick="startSpeechTest(this)" aria-label="${index + 1}問目を音声で答える"><span class="test-transcript"></span><span class="test-status"></span></button>${wordBank}</td></tr>`;
   }).join("");
   const timer = `<button class="test-timer-btn" id="testTimerBtn" type="button" aria-label="タイマー">${formatTestDuration(getTestDurationSeconds(selected.map(({ row }) => row)))}</button>`;
   document.getElementById("tableArea").innerHTML = `<table class="test-table"><tr><th>問題</th><th>あなたの答え</th></tr>${body}</table><button class="test-reveal-btn" type="button" onclick="revealTestAnswers()">答え</button>${timer}<div class="scroll-extra-y"></div>`;
@@ -9724,6 +9746,7 @@ function fitChallengeColumns(table) {
   measurement.remove();
   const width = table.getBoundingClientRect().width;
   table.style.setProperty("--challenge-prompt-width", `${Math.ceil(Math.min(longest + 2, width * 0.5))}px`);
+  table.querySelectorAll(".conversation-word-choices").forEach(fitPieceChoiceRows);
 }
 
 function fitTableTextOneLine() {
