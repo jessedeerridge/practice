@@ -2941,7 +2941,7 @@ function getTodayStickerCount(now = Date.now()) {
     const timestamp = Number(result.achievedAt);
     const percent = Number(result.percent);
     return result.name === name && Number.isFinite(timestamp) && timestamp > 0 && timestamp <= now
-      && Number.isFinite(percent) && (percent >= 100 || result.reason === "like")
+      && Number.isFinite(percent) && isAchievedTestResult(result)
       && getHomeStickerDay(timestamp) === today;
   }).length;
 }
@@ -5467,13 +5467,21 @@ function placeAchievementStamps(button, pile, completed) {
   });
 }
 
+function isAchievedTestResult(result) {
+  const percent = Number(result?.percent);
+  if (!Number.isFinite(percent)) return false;
+  const conversation = Object.hasOwn(conversationPracticeData, result.mode) ||
+    ["ショッピングモールへ行く", "大学の生活", "大学の過ごし方"].includes(result.mode);
+  return percent >= 100 || (!conversation && result.reason === "like");
+}
+
 function renderAchievementStamps(root = document) {
   if (!root) return;
   const participantName = getSavedTestParticipantName();
   const completedByMode = new Map();
   if (participantName) {
     for (const result of getAchievementResults()) {
-      if (result?.name !== participantName || (Number(result.percent) < 100 && result.reason !== "like")) continue;
+      if (result?.name !== participantName || !isAchievedTestResult(result)) continue;
       const mode = result.conjugation || (result.mode === "ショッピングモールへ行く" ? "買いもの" : result.mode);
       if (!completedByMode.has(mode)) completedByMode.set(mode, []);
       completedByMode.get(mode).push(result);
@@ -6233,7 +6241,7 @@ function recordCurrentTestResult(reason) {
 function finishTestAtTimeout() {
   if (testResultSaved) return;
   const correctCount = document.querySelectorAll("#tableArea .test-answer-button[data-correct='true']").length;
-  const earnedLike = nonConjugationQuestionTypes.has(currentTableType) && correctCount >= 12;
+  const earnedLike = currentSection !== "conversation" && !Object.hasOwn(conversationPracticeData, currentTableType) && nonConjugationQuestionTypes.has(currentTableType) && correctCount >= 12;
   if (earnedLike) {
     // 「いいね」の達成は reason で記録し、得点は時間切れ時点の実際の値を保存する。
     saveTestResult(getCurrentTestPercent(), "like");
