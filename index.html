@@ -3182,17 +3182,19 @@ function makeConjugationPieces(row, answerReading) {
   if (currentTableType === "形-ない" || currentTableType === "形くない") {
     const match = answer.match(/^(.*?)(く|じゃ)ないです$/);
     if (match) {
-      const words = [match[1], match[2], "ないです"];
+      const stem = match[1] === "かっこよ" ? "かっこ" : match[1];
+      const words = [stem, ...(match[1] === "かっこよ" ? ["よ"] : []), match[2], "ないです"];
       const extras = match[2] === "く" ? ["い"] : ["な", "く"];
-      return { words, choices: [...words, ...extras], answer, stem: match[1] };
+      return { words, choices: [...words, ...extras], answer, stem };
     }
   }
   if (currentTableType === "形-なかった") {
     const match = answer.match(/^(.*?)(く|じゃ)なかったです$/);
     if (match) {
-      const words = [match[1], match[2], "なかったです"];
+      const stem = match[1] === "かっこよ" ? "かっこ" : match[1];
+      const words = [stem, ...(match[1] === "かっこよ" ? ["よ"] : []), match[2], "なかったです"];
       const extras = match[2] === "く" ? ["い", "じゃ", "ないです"] : ["い", "く", "ないです"];
-      return { words, choices: [...words, ...extras], answer, stem: match[1] };
+      return { words, choices: [...words, ...extras], answer, stem };
     }
   }
   let stem = dictionary.replace(/(?:する|くる|[うくぐすつぬぶむるい])$/, "");
@@ -3201,6 +3203,7 @@ function makeConjugationPieces(row, answerReading) {
     while (length < Math.min(dictionary.length, answer.length) && dictionary[length] === answer[length]) length++;
     stem = answer.slice(0, length);
   }
+  if (dictionary === "かっこいい" && answer.startsWith("かっこ")) stem = "かっこ";
   const words = stem ? [stem] : [];
   let rest = answer.slice(stem.length);
   const endings = ["ませんでした", "ましょうか", "なければ", "ください", "ませんか", "なかった", "ましょう", "ました", "ません", "られる", "させる", "じゃ", "ます", "です", "ない", "よう", "れる", "たら", "たり"];
