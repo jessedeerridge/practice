@@ -2562,7 +2562,7 @@
     overflow-wrap: anywhere;
     padding: 10px 6px;
   }
-  .conversation-word-bank { display: none; flex-direction: column; gap: 6px; width: 100%; min-width: 0; padding: 0; font-size: var(--piece-font-size, 14px); line-height: 1.45; }
+  .conversation-word-bank { display: none; flex-direction: column; gap: 6px; width: 100%; min-width: 0; padding: 0; font-size: 16px; line-height: 1.45; }
   body.test-mode.conversation-keyboard .conversation-word-bank { display: flex; }
   .conversation-selected-words, .conversation-word-choices {
     display: flex; flex-wrap: nowrap; justify-content: flex-start; align-items: center;
@@ -2619,6 +2619,11 @@
   .town-travel { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; vertical-align: middle; line-height: 1.1; }
   .town-travel-time { display: block; font-size: 0.6em; font-weight: 900; line-height: 1; margin-top: 0.12em; }
   #testModeBtn[hidden] { display: none; }
+  #tableArea table.test-table th:first-child,
+  #tableArea table.test-table td:first-child { width: var(--challenge-prompt-width, 30%); }
+  #tableArea table.test-table th:last-child,
+  #tableArea table.test-table td:last-child { width: calc(100% - var(--challenge-prompt-width, 30%)); }
+  #tableArea table.test-table td:first-child .word-text { padding: 0; text-align: left; }
 </style>
 </head>
 
@@ -6901,7 +6906,6 @@ function makeTestTable() {
       row,
       answer: getCellAnswerText(answerCell),
       answerReading: getCellAnswerReading(answerCell),
-      answerFontSize: getComputedStyle(answerCell.querySelector(".answer-text") || answerCell).fontSize,
       acceptedAnswers: row.dataset.acceptedAnswers || "[]"
     };
   });
@@ -6924,7 +6928,7 @@ function makeTestTable() {
       item.answerReading = pieces.answer;
     });
   }
-  const body = selected.map(({ row, answer, answerReading, answerFontSize, acceptedAnswers }, index) => {
+  const body = selected.map(({ row, answer, answerReading, acceptedAnswers }, index) => {
     const prompt = row.cells[0].cloneNode(true);
     prompt.querySelectorAll(".question-box").forEach(node => node.remove());
     const kanjiReadingMap = getCellKanjiReadingMap(row.cells[row.cells.length - 1]);
@@ -6936,7 +6940,7 @@ function makeTestTable() {
       wordChoices = [correct, ...shuffleArray(alternatives).slice(0, 4)];
     }
     const orderedChoices = isConjugation && row.dataset.stemPiece ? [wordChoices[0], ...shuffleArray(wordChoices.slice(1))] : shuffleArray(wordChoices);
-    const wordBank = wordChoices.length ? `<div class="conversation-word-bank" style="--piece-font-size:${escapeHtml(answerFontSize)}" data-answer-prefix="${escapeHtml(row.dataset.answerPrefix || "")}" role="group" aria-label="単語を選んで答える"><div class="conversation-selected-words" role="group" aria-label="選んだ単語">${escapeHtml(row.dataset.answerPrefix || "")}</div><div class="conversation-word-choices" role="group" aria-label="単語の選択肢">${orderedChoices.map((word, i) => `<button type="button" data-word-index="${i}" aria-pressed="false" onclick="chooseConversationWord(this)">${escapeHtml(word)}</button>`).join("")}</div></div>` : "";
+    const wordBank = wordChoices.length ? `<div class="conversation-word-bank" data-answer-prefix="${escapeHtml(row.dataset.answerPrefix || "")}" role="group" aria-label="単語を選んで答える"><div class="conversation-selected-words" role="group" aria-label="選んだ単語">${escapeHtml(row.dataset.answerPrefix || "")}</div><div class="conversation-word-choices" role="group" aria-label="単語の選択肢">${orderedChoices.map((word, i) => `<button type="button" data-word-index="${i}" aria-pressed="false" onclick="chooseConversationWord(this)">${escapeHtml(word)}</button>`).join("")}</div></div>` : "";
     return `<tr><td>${prompt.innerHTML}</td><td class="test-answer-cell"><button class="test-answer-button" type="button" data-answer="${escapeHtml(answer)}" data-word-answer="${escapeHtml(row.dataset.wordAnswer || "")}" data-stem-piece="${escapeHtml(row.dataset.stemPiece || "")}" data-answer-reading="${escapeHtml(answerReading)}" data-accepted-answers="${escapeHtml(acceptedAnswers)}" data-kanji-reading-map="${escapeHtml(JSON.stringify(kanjiReadingMap))}" data-conjugation="${isConjugation}" data-connect="${isConnect}" data-selected="false" aria-pressed="false" onclick="startSpeechTest(this)" aria-label="${index + 1}問目を音声で答える"><span class="test-transcript"></span><span class="test-status"></span></button>${wordBank}</td></tr>`;
   }).join("");
   const timer = `<button class="test-timer-btn" id="testTimerBtn" type="button" aria-label="タイマー">${formatTestDuration(getTestDurationSeconds(selected.map(({ row }) => row)))}</button>`;
@@ -9699,9 +9703,37 @@ function listenPromptUsesMoreThanTwoLines(el) {
   return prompt.getBoundingClientRect().height > lineHeight * 2 + 1;
 }
 
+function fitChallengeColumns(table) {
+  const measurement = document.createElement("span");
+  measurement.style.cssText = "position:fixed;left:-10000px;top:0;visibility:hidden;white-space:nowrap;width:max-content;";
+  document.body.appendChild(measurement);
+  let longest = 0;
+  table.querySelectorAll("td:first-child .word-text, th:first-child").forEach(original => {
+    const style = getComputedStyle(original);
+    const clone = original.cloneNode(true);
+    clone.style.cssText = "display:inline-block;width:max-content;min-width:0;max-width:none;padding:0;transform:none;";
+    clone.style.setProperty("white-space", "nowrap", "important");
+    clone.style.font = style.font;
+    clone.style.letterSpacing = style.letterSpacing;
+    measurement.replaceChildren(clone);
+    const cell = original.closest("td, th");
+    const cellStyle = getComputedStyle(cell);
+    const padding = parseFloat(cellStyle.paddingLeft) + parseFloat(cellStyle.paddingRight);
+    longest = Math.max(longest, clone.getBoundingClientRect().width + padding);
+  });
+  measurement.remove();
+  const width = table.getBoundingClientRect().width;
+  table.style.setProperty("--challenge-prompt-width", `${Math.ceil(Math.min(longest + 2, width * 0.5))}px`);
+}
+
 function fitTableTextOneLine() {
   const table = document.querySelector("#tableArea table");
   if (!table) return;
+  if (table.classList.contains("test-table")) {
+    applyTableModeClasses(table);
+    fitChallengeColumns(table);
+    return;
+  }
 
   const maxFont = 18;
   const minTableFont = 15;
