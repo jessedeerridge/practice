@@ -6079,10 +6079,10 @@ function replaceKnownKanjiWithReadings(value, kanjiReadingMap = []) {
   );
 }
 
-function normalizeSpeechForComparison(value, kanjiReadingMap = [], isConjugation = false, isConnect = false) {
+function normalizeSpeechForComparison(value, kanjiReadingMap = [], isConjugation = false, isConnect = false, expected = "", sharedReadings = true) {
   // 完全な言い換え候補を先に保護してから、この問題固有のルビを適用する。
   // 例：「友達」の「友」だけが先に「とも」になると「とも達」になり、候補と一致しなくなる。
-  const modeNormalized = isConjugation ? replaceConjugationVariants(value) : value;
+  const modeNormalized = isConjugation ? replaceConjugationVariants(value) : sharedReadings ? normalizeConversationSpeech(value, expected) : value;
   const connectNormalized = isConnect ? replaceConnectSpeechEquivalentAliases(modeNormalized) : modeNormalized;
   const protectedAliases = replaceSpeechEquivalentAliases(connectNormalized);
   const withReadings = replaceKnownKanjiWithReadings(protectedAliases, kanjiReadingMap);
@@ -6163,16 +6163,18 @@ function getSpeechAnswerVariants(answer, isConjugation = false) {
 }
 
 function isSpeechAnswerCorrect(transcript, answers, kanjiReadingMap = [], isConjugation = false, isConnect = false) {
-  const normalizedTranscript = normalizeSpeechForComparison(transcript, kanjiReadingMap, isConjugation, isConnect);
   return answers.some(answer => {
     // 問題文の注意喚起として付けた冒頭の「あ！」は、発話しなくても採点に影響させない。
     const answerVariants = getSpeechAnswerVariants(answer, isConjugation);
     return answerVariants.some(answerVariant => {
-      const normalizedAnswer = normalizeSpeechForComparison(answerVariant, kanjiReadingMap, isConjugation, isConnect);
-      if (!normalizedAnswer) return false;
-      return isConjugation
-        ? normalizedTranscript.includes(normalizedAnswer)
-        : isOrderedSpeechMatch(normalizedTranscript, normalizedAnswer);
+      return (isConjugation ? [false] : [false, true]).some(sharedReadings => {
+        const normalizedTranscript = normalizeSpeechForComparison(transcript, kanjiReadingMap, isConjugation, isConnect, answerVariant, sharedReadings);
+        const normalizedAnswer = normalizeSpeechForComparison(answerVariant, kanjiReadingMap, isConjugation, isConnect, answerVariant, sharedReadings);
+        if (!normalizedAnswer) return false;
+        return isConjugation
+          ? normalizedTranscript.includes(normalizedAnswer)
+          : isOrderedSpeechMatch(normalizedTranscript, normalizedAnswer);
+      });
     });
   });
 }
@@ -6743,6 +6745,102 @@ function skipSpeechQuestion(target, transcript) {
   activeSpeechSegments.clear();
   abortCurrentSpeechRecognition();
   startNextSpeechQuestion(target);
+}
+
+// Shared speech readings for conversation, listening, speaking and connecting; piece grading stays exact.
+const CONVERSATION_SPEECH_READINGS = [
+  ["げつようび", "月曜日", "月よう日", "月曜び"],
+  ["かようび", "火曜日", "火よう日", "火曜び"],
+  ["もくようび", "木曜日", "木よう日", "木曜び"],
+  ["きんようび", "金曜日", "金よう日", "金曜び"],
+  ["どようび", "土曜日", "土よう日", "土曜び"],
+  ["にちようび", "日曜日", "日よう日", "日曜び"],
+  ["あした", "明日"], ["あさって", "明後日"], ["きのう", "昨日", "機能", "帰納"],
+  ["おととい", "一昨日"], ["まいしゅう", "毎週", "毎しゅう"],
+  ["こんしゅう", "今週", "今しゅう"], ["らいしゅう", "来週", "来襲"],
+  ["いっしゅうかん", "一週間", "1週間", "1しゅうかん", "一週刊"],
+  ["いっかげつ", "一か月", "一ヶ月", "一箇月", "1か月", "1ヶ月", "1カ月", "1ケ月", "1箇月", "一かげつ"],
+  ["いつも", "何時も"], ["ときどき", "時々", "時時", "時どき"],
+  ["としょかん", "図書館", "図書かん"], ["おみせ", "お店", "御店"],
+  ["しょっぴんぐもーる", "ショッピングモール", "shopping mall", "shoppingmall"],
+  ["すーぱー", "スーパー", "super"], ["ぐらうんど", "グラウンド", "グランド", "ground"],
+  ["こーと", "コート", "court", "coat"], ["たいいくかん", "体育館", "体育かん"],
+  ["こうえん", "公園", "講演", "公演", "後援", "高円"], ["うみ", "海", "膿", "産み", "生み"],
+  ["からおけ", "カラオケ", "karaoke"], ["おまつり", "お祭り", "御祭り"],
+  ["まえ", "前", "まへ"], ["うしろ", "後ろ", "後"], ["ひだり", "左"], ["みぎ", "右"],
+  ["うえ", "上", "植え", "飢え"], ["した", "下", "舌"], ["ちかく", "近く", "知覚", "地殻"], ["なか", "中", "仲"],
+  ["ききます", "聞きます", "聴きます", "訊きます", "効きます", "利きます"],
+  ["かきます", "書きます", "描きます", "掻きます", "欠きます"],
+  ["かえります", "帰ります", "返ります", "還ります", "変えります"],
+  ["します", "為ます"], ["かいます", "買います", "飼います", "会います", "換います"],
+  ["きます", "着ます", "来ます"], ["やすみます", "休みます"], ["あそびます", "遊びます"],
+  ["はなします", "話します", "離します", "放します"], ["うたいます", "歌います", "唄います", "謡います", "詠います"],
+  ["あるきます", "歩きます"], ["はしります", "走ります", "奔ります"], ["およぎます", "泳ぎます"],
+  ["あいます", "会います", "合います", "逢います", "遭います", "遇います"],
+  ["でんわします", "電話します", "でん話します", "電わします"],
+  ["かいものします", "買い物します", "買物します", "買いものします"],
+  ["さんぽします", "散歩します", "三歩します", "3歩します"],
+  ["そうじします", "掃除します", "相似します", "そう除します"],
+  ["でかけます", "出かけます", "出掛けます", "出駆けます"],
+  ["つくります", "作ります", "造ります", "創ります"],
+  ["とります", "撮ります", "取ります", "採ります", "捕ります", "執ります", "録ります", "摂ります"],
+  ["のぼります", "登ります", "上ります", "昇ります"],
+  ["おしごと", "お仕事", "御仕事"], ["しごと", "仕事", "私事"], ["なまえ", "名前", "名まえ"],
+  ["しゅっしん", "出身", "出神"], ["どちら", "何方"], ["かいしゃいん", "会社員", "会社院"],
+  ["すずきさん", "鈴木さん", "鈴木サン"], ["だいがく", "大学", "大學"], ["せんせい", "先生", "宣誓", "先制"],
+  ["たんじょうび", "誕生日", "誕生び"], ["しゅみ", "趣味", "守備", "主見"], ["りょこう", "旅行", "履行", "旅程"],
+  ["わたし", "私", "渡し"], ["おなじ", "同じ"], ["でんき", "電気", "電器", "電機", "伝記"],
+  ["でんきや", "電気屋", "電器屋", "電機屋"], ["くつ", "靴", "沓"], ["ください", "下さい"],
+  ["りょうり", "料理", "良理"], ["たまご", "卵", "玉子"], ["さかな", "魚", "肴"],
+  ["ちゅうごく", "中国", "中國", "忠告"], ["ご", "語"], ["ひとつ", "一つ", "1つ"],
+  ["おねがいします", "お願いします", "お願い致します"], ["だれ", "誰"], ["ひと", "人"],
+  ["やすみ", "休み"], ["いま", "今", "居間"], ["なんじ", "何時", "汝"], ["いちじはん", "1時半", "一時半", "1じ半"],
+  ["なん", "何"], ["じ", "時"], ["はん", "半", "班", "版"], ["きょう", "今日", "京", "教"],
+  ["すいようび", "水曜日", "水よう日"], ["しゅうまつ", "週末", "終末"], ["なに", "何"],
+  ["よる", "夜"], ["のみます", "飲みます", "呑みます"], ["あさごはん", "朝ご飯", "朝御飯", "朝ごはん"],
+  ["たべません", "食べません"], ["たべます", "食べます"], ["あさ", "朝", "麻"], ["なにも", "何も"],
+  ["そと", "外"], ["うんどう", "運動"], ["しょくどう", "食堂"], ["ごはん", "ご飯", "御飯"],
+  ["いきます", "行きます", "逝きます", "生きます"], ["いきません", "行きません", "逝きません", "生きません"],
+  ["ごご", "午後"], ["ねます", "寝ます"], ["おきます", "起きます", "置きます", "沖ます"],
+  ["べんきょう", "勉強"], ["りょう", "寮", "料", "量", "良", "涼"], ["ほん", "本"],
+  ["よみます", "読みます", "詠みます"], ["えいが", "映画", "栄華"], ["みます", "見ます", "観ます", "診ます"],
+  ["しゃんはい", "上海"], ["ぶかん", "武漢", "武官"], ["こうざん", "黄山", "鉱山", "高山"],
+  ["れいいんじ", "灵隐寺", "霊隠寺", "靈隱寺"], ["じゅうけい", "重慶", "重刑"], ["なんねい", "南寧"],
+  ["ひがし", "東"], ["まんなか", "真ん中", "真中"], ["がっこう", "学校", "學校"], ["うち", "家", "内"],
+  ["じかん", "時間"], ["くらい", "位"], ["きょうしつ", "教室"], ["あるいて", "歩いて"],
+  ["ふん", "分"], ["ぷん", "分"], ["まち", "町", "街", "待ち"], ["みどり", "緑", "翠"],
+  ["おおい", "多い", "大井"], ["すくない", "少ない"], ["おおき", "大き"], ["ちいさ", "小さ"],
+  ["にぎやか", "賑やか", "賑か"], ["きれい", "綺麗", "奇麗"], ["ところ", "所", "処"],
+  ["やま", "山"], ["ふるい", "古い", "旧い"], ["おてら", "お寺", "御寺"], ["ゆうえんち", "遊園地"],
+  ["さむ", "寒"], ["あつ", "暑", "熱", "厚"], ["ぜんぜん", "全然"], ["あまり", "余り"],
+  ["さい", "歳", "才"], ["かい", "階", "回"], ["がつ", "月"], ["にち", "日"],
+  ["2がつ25にち", "2月25日", "にがつにじゅうごにち"],
+  ["18さい", "じゅうはっさい", "じゅうはちさい"], ["19さい", "じゅうきゅうさい", "じゅうくさい"],
+  ["1かい", "いっかい"], ["1じかん", "いちじかん"], ["5ふん", "ごふん", "5ぷん"],
+  ["11じ", "じゅういちじ"], ["7じ", "しちじ", "ななじ"], ["9じ", "くじ", "きゅうじ"], ["10じ", "じゅうじ"]
+];
+
+function normalizeConversationSpeech(value, expected = "") {
+  const context = normalizeSpeechText(expected);
+  let text = normalizeSpeechText(value);
+  const aliases = CONVERSATION_SPEECH_READINGS.flatMap(([reading, ...variants]) =>
+    [reading, ...variants].map(alias => [normalizeSpeechText(alias), normalizeSpeechText(reading)]));
+  aliases.sort((a, b) => b[0].length - a[0].length);
+  // Replace once, longest first: avoid changing a reading again inside another word.
+  const map = new Map();
+  aliases.forEach(([alias, reading]) => {
+    if (!map.has(alias) || (context.includes(reading) && !context.includes(map.get(alias)))) map.set(alias, reading);
+  });
+  const pattern = Array.from(map.keys()).map(alias => alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
+  text = text.replace(new RegExp(pattern, "gu"), alias => map.get(alias));
+  return text.replace(/^しゅうまつは/, "しゅうまつ");
+}
+
+function isConversationSpeechAnswerCorrect(transcript, answers) {
+  return answers.some(answer => {
+    const actual = normalizeConversationSpeech(transcript, answer);
+    return !!actual && actual === normalizeConversationSpeech(answer, answer);
+  });
 }
 
 function isPieceAnswerCorrect(transcript, answer, conversation = false) {
