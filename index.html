@@ -2623,7 +2623,7 @@
     font-weight: 900; letter-spacing: 0.03em;
   }
   .university-hint-label { display: inline-block; font-size: 0.76em; padding: 0.1em 0.2em; border-radius: 0.4em; background: #fff0f6; color: #95617e; }
-  .university-walker { display: inline-block; transform: scaleX(-1); }
+  .university-walker, .conversation-hand-flipped { display: inline-block; transform: scaleX(-1); }
   .weekend-saturday { color: #2878d4; }
   .weekend-sunday { color: #e44855; }
   .university-time-range { font-weight: 900; }
@@ -2789,7 +2789,7 @@ function closeConjugationLevelNotice() {
 
 const TOP_MEMO_DISPLAY_LIMIT = 8;
 const MENU_MEMO_DISPLAY_LIMIT = 12;
-const nonConjugationQuestionTypes = new Set(["聞く", "話す", "つなぐ", "自己紹介", "買いもの", "大学生活", "私の町"]);
+const nonConjugationQuestionTypes = new Set(["聞く", "話す", "つなぐ", "自己紹介", "買いもの", "大学生活", "私の町", "休みの日", "一緒に", "友だちの家"]);
 let currentSection = "home";
 const conjugationMenuHtml = document.getElementById("menuButtonGrid")?.innerHTML || "";
 
@@ -3095,11 +3095,69 @@ const conversationPracticeData = {
     ["灵隐寺🕰️🛕", ["灵隐寺", "は", "ふるい", "おてら", "です"], ["ふる", "く", "の"]],
     ["重慶大🏙️", ["重慶", "は", "おおきい", "まち", "です"], ["おおき", "く", "の"]],
     ["南寧🤔❓", ["南寧", "は", "どんな", "ところ", "ですか"], ["どこ", "ますか"]],
+    ["陳さんの町🤔❓", ["陳さん", "の", "町", "は", "どんな", "ところ", "ですか"], ["どう", "どちら"]],
     ["🏘️🔎❓", ["まち", "に", "なに", "が", "あります", "か"], ["なん", "は"]],
     ["🏘️🎡🎢", ["まち", "に", "ゆうえんち", "が", "あります"], ["ところ", "おおきい"]],
     ["🏘️小…✨", ["わたし", "の", "まち", "は", "ちいさい", "ですが", "きれい", "です"], ["おおきい", "ます"]],
     ["🌬️❌", ["きょう", "は", "あまり", "さむ", "く", "ない", "です"], ["さむい", "じゃない"]],
     ["🌡️❌❌", ["きょう", "は", "ぜんぜん", "あつ", "く", "ない", "です"], ["あつい", "じゃない"]]
+  ],
+  "休みの日": [
+    ["六日❓", ["しゅうまつ", "なに", "を", "しましたか"], ["しますか", "なん"]],
+    ["六日🚶➡❓", ["しゅうまつ", "どこ", "か", "へ", "いきました", "か"], ["も", "いきません"]],
+    ["昨天🚶➡❓", ["きのう", "どこ", "か", "へ", "いきました", "か"], ["も", "いきません"]],
+    ["✈️😄", ["りょこう", "は", "たのし", "かったです"], ["を", "たのしい"]],
+    ["🎬😄", ["えいが", "は", "おもしろ", "かったです"], ["を", "おもしろい"]],
+    ["✈️💭❓", ["りょこう", "は", "どう", "でした", "か"], ["どんな", "どちら"]],
+    ["⚽💭❓", ["しあい", "は", "どう", "でした", "か"], ["なに", "たのし"]],
+    ["🤔why❓", ["どうして", "ですか"], ["どんな", "ますか", "どこか"]],
+    ["💻🤲❤️", ["パソコン", "が", "ほしい", "です"], ["を", "たい", "いい"]],
+    ["✈️❤️", ["りょこう", "が", "すき", "です"], ["を", "たい", "いい"]],
+    ["🛍️💭", ["かいもの", "を", "したい", "です"], ["する", "ほしい"]],
+    ["📸💭", ["しゃしん", "を", "とり", "たい", "です"], ["とる", "すき"]],
+    ["🚶➡⛰️📸", ["やま", "へ", "しゃしん", "を", "とり", "に", "いきます"], ["で", "とります"]],
+    ["🚶➡🛒🥬", ["スーパー", "へ", "やさい", "を", "かい", "に", "いきます"], ["で", "かいます"]]
+  ],
+  "一緒に": [
+    ["🗓️👬✈️❓", ["こんど", "いっしょに", "りょこう", "へ", "いき", "ません", "か"], ["ます", "ましょう"]],
+    ["🌃👬🍚❓", ["こんばん", "いっしょに", "ごはん", "を", "たべ", "ません", "か"], ["ます", "ましょう"]],
+    ["🌃🙅💦", ["こんばん", "は", "ちょっと"], ["が", "も", "もっと"]],
+    ["🗓️📌", ["ようじ", "が", "あります"], ["します", "いきます"]],
+    ["🌳🛝🏮🎉", ["こうえん", "で", "おまつり", "が", "あります"], ["に", "を", "しあい"]],
+    ["🌃大阪🎆", ["こんばん", "おおさか", "で", "はなび", "が", "あります"], ["に", "ようじ"]],
+    ["🎟️🎟️", ["チケット", "が", "2まい", "あります"], ["を", "よみます"]],
+    ["📄1️⃣", ["チラシ", "が", "1まい", "あります"], ["を", "よみます"]],
+    ["🎬🏆❤️❓", ["えいが", "で", "なに", "が", "いちばん", "すき", "ですか"], ["なん", "に"]],
+    ["🎤🏆❤️❓", ["うた", "で", "なに", "が", "いちばん", "すき", "ですか"], ["なん", "に"]],
+    ["🛒-🏪 近❓", ["スーパー", "と", "コンビニ", "と", "どちら", "が", "ちかい", "ですか"], ["どんな"], [["コンビニ", "と", "スーパー", "と", "どちら", "が", "ちかい", "ですか"]]],
+    ["🍰-🍨 💴❓", ["ケーキ", "と", "アイス", "と", "どちら", "が", "やすい", "ですか"], ["はやい"], [["アイス", "と", "ケーキ", "と", "どちら", "が", "やすい", "ですか"]]],
+    ["🏪＜🛒📍👍", ["コンビニ", "より", "スーパー", "の", "ほう", "が", "ちかい", "です"], ["ほん", "ちいさい", "で"]],
+    ["🚃＜🚌💨👍", ["でんしゃ", "より", "バス", "の", "ほう", "が", "はやい", "です"], ["で"]],
+    ["✓✨🛒🚶❓", ["もう", "あたらしい", "スーパー", "へ", "いきましたか"], ["まだ", "そう"]],
+    ["✓👉🎬👀❓", ["もう", "この", "えいが", "を", "みましたか"], ["いきましたか", "まだ"]],
+    ["🙅経験", ["いいえ", "まだ", "です"], ["もう", "きょう"]],
+    ["👉☕🏠💭❓", ["この", "きっさてん", "は", "どう", "ですか"], ["ここ", "まだ"]]
+  ],
+  "友だちの家": [
+    ["🛒🗺️❓", ["スーパー", "は", "どこ", "に", "ありますか"], ["で", "から"]],
+    ["近く🔎❓", ["ちかく", "に", "なに", "が", "ありますか"], ["ちかい", "で"]],
+    ["🚉🙋", ["わたし", "は", "えき", "の", "なか", "に", "います"], ["どこ", "ところ"]],
+    ["🥬🔪🙏", ["やさい", "を", "きって", "ください"], ["きり", "ましょう"]],
+    ["🖊️名前🙏", ["ペン", "で", "なまえ", "を", "かいて", "ください"], ["かき", "ましょう"]],
+    ["🍛🤷", ["カレー", "の", "つくり", "かた", "が", "わかりません"], ["つくって", "を"]],
+    ["👉🖨️🤷", ["これ", "の", "つかい", "かた", "が", "わかりません"], ["つかって", "を"]],
+    ["👉🍽️🍽️🍽️❓", ["どの", "おさら", "ですか"], ["どれ", "ますか"]],
+    ["👉🥛🥛🥛❓", ["どの", "コップ", "ですか"], ["どれ", "ました"]],
+    ["🔎 🧂🫙🥣❓", ["しお", "は", "どれ", "ですか"], ["どの", "なに"]],
+    ["陳さんの🔎📱📱📱❓", ["陳さん", "の", "スマホ", "は", "どれ", "ですか"], ["どの", "もう"]],
+    ["🍺❓", ["ビール", "は", "まだ", "ありますか"], ["もう", "ありません", "を"], [["まだ", "ビール", "は", "ありますか"]]],
+    ["🍺0️⃣", ["ビール", "は", "もう", "ありません"], ["どこ", "あります", "ちかく"], [["もう", "ビール", "は", "ありません"]]],
+    ["陳さん👬💬", ["陳さん", "は", "ともだち", "と", "はなして", "います"], ["はなす", "きます"]],
+    ["陳さん🪑🍽️😋", ["陳さん", "は", "テーブル", "で", "たべて", "います"], ["たべる", "に"]],
+    ["👉🍳👤❓", ["これ", "は", "だれ", "が", "つくりましたか"], ["から"]],
+    ["👉🍽️🫴👤❓", ["この", "りょうり", "は", "だれ", "が", "もって", "きましたか"], ["これ"]],
+    ["🙋🧹🤝❓", ["てつだい", "ましょうか"], ["ませんか", "てつだって"]],
+    ["🙋📸❓", ["しゃしん", "を", "とり", "ましょうか"], ["ませんか", "とって"]]
   ]
 };
 
@@ -3116,11 +3174,13 @@ function formatConversationPrompt(prompt) {
     .replace("📷📱💻", `<span class="shopping-electronics"><span>📷</span><span>📱</span><span>💻</span></span>`)
     .replace("🍅🥚🍽️", `<span class="shopping-food"><span>🍅</span><span>🥚</span><span>🍽️</span></span>`)
     .replace("🖼️👱‍♀️", `<span class="shopping-portrait"><span class="shopping-portrait-frame">🖼️</span><span class="shopping-portrait-person">👱‍♀️</span></span>`)
-    .replace("🚶", currentTableType === "大学生活" ? `<span class="university-walker">🚶</span>` : "🚶")
+    .replace("🫴", `<span class="conversation-hand-flipped">🫴</span>`)
+    .replace("🚶", ["大学生活", "休みの日"].includes(currentTableType) ? `<span class="university-walker">🚶</span>` : "🚶")
     .replace("食堂", `<span class="university-hint-label">食堂</span>`)
     .replace("周三", `<span class="university-hint-label">周三</span>`)
     .replace("now", `<span class="university-hint-label">now</span>`)
-    .replace(/上海|武漢|黄山|灵隐寺|重慶|南寧|中央|5分|小…|東|大|小/g, label => `<span class="university-hint-label">${label}</span>`)
+    .replace("why", `<span class="university-hint-label">why</span>`)
+    .replace(/陳さんの町|陳さんの|陳さん|近く|名前|経験|近|今度|大阪|昨天|上海|武漢|黄山|灵隐寺|重慶|南寧|中央|5分|小…|東|大|小/g, label => `<span class="university-hint-label">${label}</span>`)
     .replace("～", `<strong class="university-time-range">～</strong>`)
     .replace("六日", `<span class="university-hint-label university-weekend"><span class="weekend-saturday">六</span><span class="weekend-sunday">日</span></span>`);
 }
@@ -3131,8 +3191,8 @@ function formatConversationAnswer(words) {
 }
 
 function makeConversationTable() {
-  const rows = conversationPracticeData[currentTableType].map(([prompt, words, distractors]) =>
-    `<tr data-word-answer="${escapeHtml(words.join(" "))}" data-word-choices="${escapeHtml(JSON.stringify([...words, ...distractors]))}"><td>${makeWordCell(formatConversationPrompt(prompt))}</td><td><span class="answer-text">${escapeHtml(formatConversationAnswer(words))}</span></td></tr>`
+  const rows = conversationPracticeData[currentTableType].map(([prompt, words, distractors, alternatives = []]) =>
+    `<tr data-word-answer="${escapeHtml(words.join(" "))}" data-accepted-answers="${escapeHtml(JSON.stringify(alternatives.map(words => words.join(" "))))}" data-word-choices="${escapeHtml(JSON.stringify([...words, ...distractors]))}"><td>${makeWordCell(formatConversationPrompt(prompt))}</td><td><span class="answer-text">${escapeHtml(formatConversationAnswer(words))}</span></td></tr>`
   ).join("");
   document.getElementById("tableArea").innerHTML = `<table class="listen-table"><tr><th>問題</th><th>答え</th></tr>${rows}</table><div class="scroll-extra-y"></div>`;
 }
@@ -3379,7 +3439,7 @@ function openConversationMenu() {
   document.getElementById("tableScreen").style.display = "none";
   document.getElementById("menuScreen").style.display = "block";
   document.getElementById("menuTitle").textContent = "会話";
-  const topics = ["自己紹介", "買いもの", "大学生活", "私の町", "休みの日", "一緒に", "友だちの家"];
+  const topics = ["自己紹介", "買いもの", "大学生活", "私の町", "休みの日", "一緒に", "友だちの家", "大切な人", "好きなこと", "ツアー", "私の時間", "病気", "おすすめ"];
   document.getElementById("menuButtonGrid").innerHTML = `<div class="menu-page active conversation-menu">${Array.from({ length: 15 }, (_, index) => `<button class="menu-btn" type="button" ${conversationPracticeData[topics[index]] ? `data-achievement-mode="${topics[index]}" onclick="openConversationTopic('${topics[index]}')"` : `disabled${topics[index] ? ' title="練習内容は準備中です"' : ' aria-label="未設定"'}`}>${topics[index] || ""}</button>`).join("")}</div>`;
   document.getElementById("leftPageNav").style.display = "none";
   document.getElementById("rightPageNav").style.display = "none";
@@ -6082,7 +6142,8 @@ function replaceKnownKanjiWithReadings(value, kanjiReadingMap = []) {
 function normalizeSpeechForComparison(value, kanjiReadingMap = [], isConjugation = false, isConnect = false, expected = "", sharedReadings = true) {
   // 完全な言い換え候補を先に保護してから、この問題固有のルビを適用する。
   // 例：「友達」の「友」だけが先に「とも」になると「とも達」になり、候補と一致しなくなる。
-  const modeNormalized = isConjugation ? replaceConjugationVariants(value) : sharedReadings ? normalizeConversationSpeech(value, expected) : value;
+  const sharedValue = sharedReadings ? normalizeConversationSpeech(value, expected) : value;
+  const modeNormalized = isConjugation ? replaceConjugationVariants(sharedValue) : sharedValue;
   const connectNormalized = isConnect ? replaceConnectSpeechEquivalentAliases(modeNormalized) : modeNormalized;
   const protectedAliases = replaceSpeechEquivalentAliases(connectNormalized);
   const withReadings = replaceKnownKanjiWithReadings(protectedAliases, kanjiReadingMap);
@@ -6167,7 +6228,7 @@ function isSpeechAnswerCorrect(transcript, answers, kanjiReadingMap = [], isConj
     // 問題文の注意喚起として付けた冒頭の「あ！」は、発話しなくても採点に影響させない。
     const answerVariants = getSpeechAnswerVariants(answer, isConjugation);
     return answerVariants.some(answerVariant => {
-      return (isConjugation ? [false] : [false, true]).some(sharedReadings => {
+      return [false, true].some(sharedReadings => {
         const normalizedTranscript = normalizeSpeechForComparison(transcript, kanjiReadingMap, isConjugation, isConnect, answerVariant, sharedReadings);
         const normalizedAnswer = normalizeSpeechForComparison(answerVariant, kanjiReadingMap, isConjugation, isConnect, answerVariant, sharedReadings);
         if (!normalizedAnswer) return false;
@@ -6749,6 +6810,54 @@ function skipSpeechQuestion(target, transcript) {
 
 // Shared speech readings for conversation, listening, speaking and connecting; piece grading stays exact.
 const CONVERSATION_SPEECH_READINGS = [
+  ["てーぶる", "テーブル", "table"], ["たべて", "食べて"],
+  ["どこ", "何処", "何所"], ["どれ", "何れ"], ["どう", "如何", "同", "堂", "銅"],
+  ["どうして", "如何して", "どう仕て"], ["ちょっと", "一寸", "鳥渡"],
+  ["まだ", "未だ"], ["いいえ", "否"], ["あります", "有ります", "在ります"],
+  ["ありません", "有りません", "在りません"], ["います", "居ます"],
+  ["こんど", "今ど", "こん度"], ["いっしょに", "一緒に", "一諸に", "一しょに", "いっ緒に", "一処に"],
+  ["こんばん", "今晩", "今ばん", "こん晩"], ["ようじ", "用事", "幼児", "楊枝", "用字", "洋字"],
+  ["しあい", "試合", "仕合", "し合", "試あい"], ["たのし", "楽し", "愉し"],
+  ["おもしろ", "面白", "面しろ", "おも白"], ["ほしい", "欲しい", "ほし井"],
+  ["こうえん", "公園", "講演", "公演", "後援", "こう園", "公えん"],
+  ["おまつり", "お祭り", "御祭り", "お祭"], ["はなび", "花火", "はな火", "花び"],
+  ["おおさか", "大阪", "大坂", "おお阪", "大さか"],
+  ["いちばん", "一番", "1番", "いち番", "一ばん", "1ばん"],
+  ["ちかい", "近い", "誓い"], ["ほう", "方", "法", "ほお"], ["でんしゃ", "電車", "でん車", "電しゃ"],
+  ["あたらしい", "新しい", "新らしい"], ["きっさてん", "喫茶店", "喫茶てん", "きっ茶店", "喫さ店"],
+  ["いき", "行き", "生き", "逝き", "往き"], ["たべ", "食べ"],
+  ["みました", "見ました", "観ました", "診ました"],
+  ["かれー", "カレー", "華麗", "加齢", "過冷"], ["ちけっと", "チケット", "ticket"],
+  ["ぱそこん", "パソコン", "パーソコン"], ["こんびに", "コンビニ", "コンビ二"],
+  ["びーる", "ビール", "beer"], ["ぺん", "ペン", "pen"], ["こっぷ", "コップ", "cup"],
+  ["あいす", "アイス", "ice"], ["けーき", "ケーキ", "cake"],
+  ["つくりかた", "作り方", "造り方", "創り方", "作りかた", "つくり方", "作り型"],
+  ["つかいかた", "使い方", "遣い方", "使いかた", "つかい方", "使い型"],
+  ["わかりません", "分かりません", "判りません", "解りません", "分りません", "判かりません"],
+  ["しゃしん", "写真", "写心", "しゃ真", "写しん"], ["やさい", "野菜", "や菜", "野さい"],
+  ["ともだち", "友達", "友だち", "とも達"], ["てつだい", "手伝い", "手つだい", "て伝い"],
+  ["とり", "撮り", "取り", "採り", "録り", "捕り", "摂り", "執り"],
+  ["ちんさん", "陳さん", "珍さん", "陳サン", "沈さん", "秦さん"],
+  ["しお", "塩", "潮", "汐"], ["なまえ", "名前", "名まえ", "な前"],
+  ["2まい", "2枚", "二枚", "にまい", "に枚"], ["1まい", "1枚", "一枚", "いちまい", "いち枚"],
+  ["えき", "駅", "驛"], ["きって", "切って", "切手"], ["かいて", "書いて", "描いて", "掻いて"],
+  ["つくり", "作り", "造り", "創り"], ["かた", "方", "型"], ["つかい", "使い", "遣い"],
+  ["わかりません", "分かりません", "判りません", "解りません"], ["おさら", "お皿", "御皿"],
+  ["しお", "塩", "潮", "汐"], ["ともだち", "友達", "友だち"], ["はなして", "話して", "離して", "放して"],
+  ["つくりました", "作りました", "造りました", "創りました"], ["もって", "持って", "以て"],
+  ["きました", "来ました", "着ました"], ["てつだい", "手伝い"],
+  ["ちらし", "チラシ", "散らし"], ["1まい", "1枚", "一枚", "いちまい"],
+  ["こんど", "今度"], ["いっしょに", "一緒に", "一しょに"], ["こんばん", "今晩", "今ばん"],
+  ["ようじ", "用事", "幼児", "楊枝"], ["おおさか", "大阪", "大坂"], ["はなび", "花火"],
+  ["2まい", "2枚", "二枚", "にまい"], ["うた", "歌", "唄", "詩"],
+  ["いちばん", "一番", "1番", "1ばん"], ["ちかい", "近い", "誓い"],
+  ["やすい", "安い"], ["ほう", "方", "法"], ["でんしゃ", "電車"], ["はやい", "早い", "速い"],
+  ["あたらしい", "新しい"], ["みましたか", "見ましたか", "観ましたか"], ["きっさてん", "喫茶店", "喫茶てん"],
+  ["しあい", "試合", "仕合"], ["たのし", "楽し"], ["おもしろ", "面白"],
+  ["ほしい", "欲しい"], ["すき", "好き"], ["かいもの", "買い物", "買物"],
+  ["しゃしん", "写真", "写心"], ["とり", "撮り", "取り"], ["やさい", "野菜"],
+  ["かい", "買い", "階", "回"], ["いきました", "行きました", "逝きました", "生きました"],
+  ["ちんさん", "陳さん", "珍さん"],
   ["げつようび", "月曜日", "月よう日", "月曜び"],
   ["かようび", "火曜日", "火よう日", "火曜び"],
   ["もくようび", "木曜日", "木よう日", "木曜び"],
@@ -6843,8 +6952,8 @@ function isConversationSpeechAnswerCorrect(transcript, answers) {
   });
 }
 
-function isPieceAnswerCorrect(transcript, answer, conversation = false) {
-  if (transcript === answer) return true;
+function isPieceAnswerCorrect(transcript, answer, conversation = false, alternatives = []) {
+  if (transcript === answer || alternatives.includes(transcript)) return true;
   return conversation && answer.startsWith("しゅうまつ は ") &&
     transcript === answer.replace(/^しゅうまつ は /, "しゅうまつ ");
 }
@@ -6859,7 +6968,7 @@ function gradeSpeechAnswer(target, onlyIfCorrect = false) {
     kanjiReadingMap = [];
   }
   const correct = target.dataset.answerSource === "words"
-    ? isPieceAnswerCorrect(transcript, target.dataset.wordAnswer || target.dataset.answer, target.dataset.conversation === "true")
+    ? isPieceAnswerCorrect(transcript, target.dataset.wordAnswer || target.dataset.answer, target.dataset.conversation === "true", JSON.parse(target.dataset.acceptedAnswers || "[]"))
     : isSpeechAnswerCorrect(
     transcript,
     getSpeechAnswersForButton(target),
