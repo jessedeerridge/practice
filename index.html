@@ -3306,8 +3306,8 @@ document.addEventListener("pointermove", event => {
     drag.marker.className = "piece-drop-marker";
     drag.marker.style.width = `${rect.width + 8}px`;
   }
-  drag.ghost.style.left = `${event.clientX + 10}px`;
-  drag.ghost.style.top = `${event.clientY - 18}px`;
+  drag.ghost.style.left = `${event.clientX - drag.ghost.getBoundingClientRect().width / 2}px`;
+  drag.ghost.style.top = `${event.clientY - drag.ghost.getBoundingClientRect().height / 2}px`;
   clearPieceSplit(drag);
   const area = drag.bank.querySelector(".conversation-selected-words");
   const rect = area.getBoundingClientRect();
@@ -6931,7 +6931,15 @@ function getSavedTestParticipantName() {
   }
 }
 
+function resetChallengeScroll() {
+  window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  requestAnimationFrame(() => {
+    if (testModeActive) window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  });
+}
+
 function beginTestQuestions(mode) {
+  resetChallengeScroll();
   testInputMode = mode;
   testSessionEnded = false;
   testResultSaved = false;
@@ -7008,7 +7016,7 @@ function showTestStartPanel() {
   `);
   const input = document.getElementById("testParticipantName");
   input?.addEventListener("input", () => input.setCustomValidity(""));
-  input?.focus();
+  input?.focus({ preventScroll: true });
 }
 
 function revealTestAnswers() {
@@ -7127,6 +7135,7 @@ function toggleTestMode() {
   afterTableOrderChanged();
   testParticipantConfirmed = false;
   showTestStartPanel();
+  resetChallengeScroll();
 }
 
 function updateRandomOrderButton() {
