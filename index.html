@@ -2585,7 +2585,7 @@
     display: flex; flex-wrap: wrap; align-items: start; justify-content: flex-start; padding: 0;
   }
   .conversation-word-bank button { flex: 0 0 auto; white-space: nowrap; }
-  .conversation-word-bank button.connect-tail-piece { max-width:100%; white-space:normal; overflow-wrap:anywhere; text-align:left; }
+  .conversation-word-bank button.connect-tail-piece { max-width:none; white-space:nowrap; overflow-wrap:normal; text-align:left; }
   .connect-piece-table .conversation-selected-words { white-space:normal; }
   .conversation-word-choices button {
     width: calc(var(--piece-length, 3) * 1em + 14px);
@@ -2640,6 +2640,10 @@
   #tableArea table.test-table th:last-child,
   #tableArea table.test-table td:last-child { width: calc(100% - var(--challenge-prompt-width, 30%)); }
   #tableArea table.test-table td:first-child .word-text { padding: 0; text-align: left; }
+  #tableArea table.test-table .balanced-challenge-hint { display:block; white-space:nowrap !important; }
+  #tableArea table.test-table .balanced-challenge-line { display:block; width:max-content; white-space:nowrap; }
+  #tableArea table.connect-piece-table .balanced-challenge-line + .balanced-challenge-line { margin-left:1em; }
+
 </style>
 </head>
 
@@ -2674,15 +2678,15 @@
 <div id="homeScreen" class="screen">
   <div id="homeQuestionMemoLayer" aria-hidden="true"></div>
   <div class="home-panel">
-    <div id="homeTitle" class="home-title"><span class="title-emoji left">🐢</span> 初級1 <span class="title-emoji right">🐢</span></div>
+    <div id="homeTitle" class="home-title"><span class="title-emoji left">🐢</span> 基礎 <span class="title-emoji right">🐢</span></div>
     <div id="homeActions" class="home-actions" aria-label="練習メニュー"></div>
     <div id="homeLeftNav" class="page-nav left-nav home-page-nav disabled">
       <button class="page-arrow" type="button" onclick="changeHomeLevel(-1)" disabled aria-disabled="true">◀</button>
       <div id="homeLeftLabel" class="page-nav-label">基礎</div>
     </div>
     <div id="homeRightNav" class="page-nav right-nav home-page-nav disabled">
-      <button class="page-arrow" type="button" onclick="changeHomeLevel(1)" aria-disabled="true">▶</button>
-      <div id="homeRightLabel" class="page-nav-label">初級2</div>
+      <button class="page-arrow" type="button" onclick="changeHomeLevel(1)" disabled aria-disabled="true">▶</button>
+      <div id="homeRightLabel" class="page-nav-label">初級1</div>
     </div>
   </div>
 </div>
@@ -2795,7 +2799,7 @@ const nonConjugationQuestionTypes = new Set(["聞く", "話す", "つなぐ", "�
 let currentSection = "home";
 const conjugationMenuHtml = document.getElementById("menuButtonGrid")?.innerHTML || "";
 
-let currentHomeLevel = 1;
+let currentHomeLevel = 0;
 let currentHomeMenu = "main";
 let currentVocabCountLevel = currentHomeLevel;
 let currentConjugationCountLevel = currentHomeLevel;
@@ -3001,9 +3005,9 @@ function updateHomeNav() {
   if (!leftNav || !rightNav || !leftLabel || !rightLabel) return;
 
   const onVocab = currentHomeMenu === "vocab";
-  const leftDisabled = onVocab || currentHomeLevel <= 1;
+  const leftDisabled = onVocab || currentHomeLevel <= 0;
   leftNav.classList.toggle("disabled", leftDisabled);
-  const rightDisabled = onVocab || currentHomeLevel >= 1;
+  const rightDisabled = onVocab || currentHomeLevel >= 0;
   rightNav.classList.toggle("disabled", rightDisabled);
   const rightButton = rightNav.querySelector(".page-arrow");
   const leftButton = leftNav.querySelector(".page-arrow");
@@ -3011,14 +3015,17 @@ function updateHomeNav() {
     leftButton.disabled = leftDisabled;
     leftButton.setAttribute("aria-disabled", leftDisabled ? "true" : "false");
   }
-  if (rightButton) rightButton.setAttribute("aria-disabled", rightDisabled ? "true" : "false");
+  if (rightButton) {
+    rightButton.disabled = rightDisabled;
+    rightButton.setAttribute("aria-disabled", rightDisabled ? "true" : "false");
+  }
   leftLabel.textContent = onVocab ? "" : (currentHomeLevel === 1 ? "基礎" : "");
   rightLabel.textContent = onVocab ? "" : (currentHomeLevel === 0 ? "初級1" : "初級2");
 }
 
 function changeHomeLevel(direction) {
   const nextLevel = currentHomeLevel + direction;
-  if (nextLevel < 1 || nextLevel > 1) return;
+  if (nextLevel < 0 || nextLevel > 0) return;
   currentHomeLevel = nextLevel;
   setHomeMenu("main");
   renderQuestionMemoLayer();
@@ -6591,12 +6598,13 @@ function getTestDurationSeconds(questions) {
   if (usesPieceAnswers()) {
     const extraSeconds = currentSection === "conjugation" ? 30
       : currentSection === "conversation" ? questions.length * 2
-      : ["聞く", "話す", "つなぐ"].includes(currentTableType) ? 60 : 20;
-    return questions.reduce((total, question) => {
+      : 20;
+    const duration = questions.reduce((total, question) => {
       const pieces = (question.dataset.wordAnswer || "").trim().split(/\s+/).filter(Boolean).length;
       const stemPieces = currentSection === "conjugation" && question.dataset.stemPiece ? 1 : 0;
       return total + Math.max(0, pieces - stemPieces);
     }, 0) * 2.5 + extraSeconds;
+    return ["聞く", "話す", "つなぐ"].includes(currentTableType) ? Math.max(160, duration) : duration;
   }
   return questions.length * 10 + 20;
 }
@@ -7210,6 +7218,8 @@ function isConversationSpeechAnswerCorrect(transcript, answers) {
 
 function isPieceAnswerCorrect(transcript, answer, conversation = false, alternatives = [], flexibleAdverbs = false, optionalTopic = false) {
   if (transcript === answer) return true;
+  if (answer === "ともだち に プレゼント を あげました" &&
+      transcript === "プレゼント を ともだち に あげました") return true;
   if (answer === "あに が ひとり と おとうと が ひとり います" &&
       transcript === "おとうと が ひとり と あに が ひとり います") return true;
   if (optionalTopic && /^(?:あした|ねんまつ) は /.test(answer)) {
@@ -7438,7 +7448,7 @@ function beginTestQuestions(mode) {
   startTestCountdown();
   document.body.classList.toggle("conversation-keyboard", usesPieceAnswers() && mode === "keyboard");
   if (usesPieceAnswers() && mode === "keyboard") {
-    document.querySelectorAll(".conversation-word-choices").forEach(fitPieceChoiceRows);
+    fitTableTextOneLine();
     return;
   }
   const firstQuestion = document.querySelector("#tableArea .test-answer-button");
@@ -10370,22 +10380,109 @@ function listenPromptUsesMoreThanTwoLines(el) {
   return prompt.getBoundingClientRect().height > lineHeight * 2 + 1;
 }
 
+const challengeHintLayouts = new WeakMap();
+function getBalancedChallengeHint(original, measurement) {
+  const style = getComputedStyle(original);
+  const cached = challengeHintLayouts.get(original);
+  const fontKey = `${style.font}|${style.letterSpacing}`;
+  if (cached?.fontKey === fontKey) return cached;
+  const flat = document.createElement("span");
+  flat.innerHTML = cached?.source || original.innerHTML;
+  const source = flat.innerHTML;
+  const connectLines = currentTableType === "つなぐ" ? Array.from(flat.querySelectorAll(".tara-hint-line"), line => line.cloneNode(true)) : [];
+  flat.querySelectorAll("br").forEach(node => node.remove());
+  flat.querySelectorAll(".tara-hint-line, .listen-prompt").forEach(node => node.replaceWith(...node.childNodes));
+  const units = [];
+  const segmenter = new Intl.Segmenter("ja", { granularity: "grapheme" });
+  const visit = node => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      node.textContent = node.textContent.replace(/\s+/g, "");
+      for (const { segment, index } of segmenter.segment(node.textContent)) units.push({ node, offset: index + segment.length });
+    } else if (node.matches?.("ruby, .connect-separator, .speak-route, .listen-prompt-emoji, .shopping-electronics, .shopping-portrait")) {
+      units.push({ node: node.parentNode, offset: Array.prototype.indexOf.call(node.parentNode.childNodes, node) + 1 });
+    } else {
+      Array.from(node.childNodes).forEach(visit);
+    }
+  };
+  Array.from(flat.childNodes).forEach(visit);
+  const measure = fragment => {
+    const line = document.createElement("span");
+    line.style.cssText = "display:inline-block;width:max-content;max-width:none;white-space:nowrap;";
+    line.style.font = style.font;
+    line.style.letterSpacing = style.letterSpacing;
+    line.appendChild(fragment.cloneNode(true));
+    measurement.replaceChildren(line);
+    return { html: line.innerHTML, width: line.getBoundingClientRect().width };
+  };
+  if (connectLines.length === 2) {
+    const separator = connectLines[0].querySelector(".connect-separator");
+    if (separator && !separator.classList.contains("connect-separator-before-after")) connectLines[0].appendChild(separator);
+    const fragments = connectLines.map(line => {
+      const fragment = document.createDocumentFragment();
+      fragment.append(...line.childNodes);
+      return fragment;
+    });
+    const first = measure(fragments[0]);
+    const second = measure(fragments[1]);
+    const layout = { first, second, width:Math.max(first.width, second.width), single:{html:flat.innerHTML, width:Infinity}, source, fontKey, forceBreak:true };
+    challengeHintLayouts.set(original, layout);
+    return layout;
+  }
+  const single = measure(flat);
+  if (currentTableType === "話す") {
+    single.html = flat.innerHTML;
+    const layout = { first:single, second:{html:"", width:0}, width:single.width, single, source, fontKey };
+    challengeHintLayouts.set(original, layout);
+    return layout;
+  }
+  // measure(flat) includes an unnecessary wrapper; keep just the original inline content.
+  single.html = flat.innerHTML;
+  let best = { first: single, second: { html: "", width: 0 }, width: single.width };
+  for (let index = 0; index < units.length - 1; index++) {
+    const boundary = units[index];
+    const firstRange = document.createRange();
+    firstRange.setStart(flat, 0);
+    firstRange.setEnd(boundary.node, boundary.offset);
+    const secondRange = document.createRange();
+    secondRange.setStart(boundary.node, boundary.offset);
+    secondRange.setEnd(flat, flat.childNodes.length);
+    const first = measure(firstRange.cloneContents());
+    const second = measure(secondRange.cloneContents());
+    const width = Math.max(first.width, second.width);
+    if (first.width && second.width && width < best.width) best = { first, second, width };
+  }
+  const layout = { ...best, single, source, fontKey };
+  challengeHintLayouts.set(original, layout);
+  return layout;
+}
+
 function fitChallengeColumns(table) {
+  const textHintChallenge = ["聞く", "話す", "つなぐ"].includes(currentTableType);
+  const hintLayouts = [];
   const measurement = document.createElement("span");
   measurement.style.cssText = "position:fixed;left:-10000px;top:0;visibility:hidden;white-space:nowrap;width:max-content;";
   document.body.appendChild(measurement);
   let longest = 0;
   table.querySelectorAll("td:first-child .word-text, th:first-child").forEach(original => {
     const style = getComputedStyle(original);
+    const cell = original.closest("td, th");
+    const cellStyle = getComputedStyle(cell);
+    const padding = parseFloat(cellStyle.paddingLeft) + parseFloat(cellStyle.paddingRight);
+    if (textHintChallenge && original.classList.contains("word-text")) {
+      const layout = getBalancedChallengeHint(original, measurement);
+      hintLayouts.push({ original, layout, padding });
+      const hintWidth = currentTableType === "つなぐ"
+        ? Math.max(layout.first.width, layout.second.width + parseFloat(style.fontSize))
+        : layout.width;
+      longest = Math.max(longest, hintWidth + padding);
+      return;
+    }
     const clone = original.cloneNode(true);
     clone.style.cssText = "display:inline-block;width:max-content;min-width:0;max-width:none;padding:0;transform:none;";
     clone.style.setProperty("white-space", "nowrap", "important");
     clone.style.font = style.font;
     clone.style.letterSpacing = style.letterSpacing;
     measurement.replaceChildren(clone);
-    const cell = original.closest("td, th");
-    const cellStyle = getComputedStyle(cell);
-    const padding = parseFloat(cellStyle.paddingLeft) + parseFloat(cellStyle.paddingRight);
     longest = Math.max(longest, clone.getBoundingClientRect().width + padding);
   });
   measurement.remove();
@@ -10426,6 +10523,12 @@ function fitChallengeColumns(table) {
   const preferredLeft = Math.max(minimumLeft, width * 0.45);
   const left = Math.max(minimumLeft, Math.min(preferredLeft, width - neededRight));
   table.style.setProperty("--challenge-prompt-width", `${Math.ceil(left)}px`);
+  hintLayouts.forEach(({ original, layout, padding }) => {
+    original.classList.add("balanced-challenge-hint");
+    original.innerHTML = !layout.forceBreak && layout.single.width <= Math.ceil(left) - padding
+      ? layout.single.html
+      : `<span class="balanced-challenge-line">${layout.first.html}</span><span class="balanced-challenge-line">${layout.second.html}</span>`;
+  });
   table.querySelectorAll(".conversation-word-choices").forEach(fitPieceChoiceRows);
 }
 
