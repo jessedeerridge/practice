@@ -3146,8 +3146,11 @@ const conversationPracticeData = {
     ["🚃＜🚌💨👍", ["でんしゃ", "より", "バス", "の", "ほう", "が", "はやい", "です"], ["で"]],
     ["✓✨🛒🚶❓", ["もう", "あたらしい", "スーパー", "へ", "いきましたか"], ["まだ", "そう"]],
     ["✓👉🎬👀❓", ["もう", "この", "えいが", "を", "みましたか"], ["いきましたか", "まだ"]],
-    ["🙅経験", ["いいえ", "まだ", "です"], ["もう", "きょう"]],
-    ["👉☕🏠💭❓", ["この", "きっさてん", "は", "どう", "ですか"], ["ここ", "まだ"]]
+    ["🙅还没", ["いいえ", "まだ", "です"], ["もう", "きょう"]],
+    ["👉☕🏠💭❓", ["この", "きっさてん", "は", "どう", "ですか"], ["ここ", "まだ"]],
+    ["🕕💭❓", ["6", "じ", "は", "どう", "ですか"], ["に", "なん"]],
+    ["🕢💭❓", ["7", "じ", "はん", "は", "どう", "ですか"], ["ばん"]],
+    ["🕕✅👌", ["6", "じ", "です", "ね。", "わかりました"], ["か", "わかりません"]]
   ],
   "友だちの家": [
     ["🛒🗺️❓", ["スーパー", "は", "どこ", "に", "ありますか"], ["で", "から"]],
@@ -3191,7 +3194,7 @@ function formatConversationPrompt(prompt) {
     .replace("周三", `<span class="university-hint-label">周三</span>`)
     .replace("now", `<span class="university-hint-label">now</span>`)
     .replace("why", `<span class="university-hint-label">why</span>`)
-    .replace(/陳さんの町|陳さんの|陳さん|近く|名前|経験|近|今度|大阪|昨天|上海|武漢|黄山|灵隐寺|重慶|南寧|中央|5分|小…|東|大|小/g, label => `<span class="university-hint-label">${label}</span>`)
+    .replace(/陳さんの町|陳さんの|陳さん|近く|名前|还没|近|今度|大阪|昨天|上海|武漢|黄山|灵隐寺|重慶|南寧|中央|5分|小…|東|大|小/g, label => `<span class="university-hint-label">${label}</span>`)
     .replace("～", `<strong class="university-time-range">～</strong>`)
     .replace("六日", `<span class="university-hint-label university-weekend"><span class="weekend-saturday">六</span><span class="weekend-sunday">日</span></span>`);
 }
