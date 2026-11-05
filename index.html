@@ -2650,9 +2650,9 @@
   #tableArea table.test-table td:first-child { width: var(--challenge-prompt-width, 30%); }
   #tableArea table.test-table th:last-child,
   #tableArea table.test-table td:last-child { width: calc(100% - var(--challenge-prompt-width, 30%)); }
-  #tableArea table.test-table td:first-child .word-text { padding: 0; text-align: left; }
+  #tableArea table.test-table td:first-child .word-text { padding: 0; text-align: center; }
   #tableArea table.test-table .balanced-challenge-hint { display:block; white-space:nowrap !important; }
-  #tableArea table.test-table .balanced-challenge-line { display:block; width:max-content; white-space:nowrap; }
+  #tableArea table.test-table .balanced-challenge-line { display:block; width:max-content; max-width:100%; margin-inline:auto; white-space:nowrap; }
   #tableArea table.connect-piece-table .balanced-challenge-line + .balanced-challenge-line { margin-left:1em; }
 
 </style>
