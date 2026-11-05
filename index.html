@@ -4530,7 +4530,7 @@ function makeVocabTable(type) {
     }
     const [word, reading, special] = row;
     const attributes = hasVocabularyChallenge(type) ? ` data-word-answer="${escapeHtml(reading)}"` : "";
-    const prompt = type === "動詞" && reading === "いきます" ? `<span class="conversation-hand-flipped">${escapeHtml(word)}</span>` : chinesePrompt ? `<span lang="zh">${escapeHtml(word)}</span>` : type === "数え方" && /人$/.test(word) ? `<span data-no-furigana>${escapeHtml(word)}</span>` : escapeHtml(word);
+    const prompt = type === "動詞" && reading === "いきます" ? `<span class="conversation-hand-flipped">${escapeHtml(word)}</span>➡` : chinesePrompt ? `<span lang="zh">${escapeHtml(word)}</span>` : type === "数え方" && /人$/.test(word) ? `<span data-no-furigana>${escapeHtml(word)}</span>` : escapeHtml(word);
     html += `<tr${special ? ' class="vocab-special"' : ''}${attributes}><td>${makeWordCell(prompt)}</td><td><span class="answer-text">${escapeHtml(reading)}</span></td></tr>`;
   });
   html += `</table><div class="scroll-extra-y"></div>`;
