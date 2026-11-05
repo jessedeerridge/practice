@@ -988,13 +988,14 @@
 
   #tableArea table.adjective-noun-table { min-width: 560px; }
   .table-wrap:has(.adjective-noun-table) { overflow-x: auto; }
-  #tableArea table.adjective-noun-table ruby {
+  #tableArea table.adjective-noun-table .adjective-noun-ruby {
     display: inline-flex; position: relative; vertical-align: baseline; align-items: baseline;
   }
-  #tableArea table.adjective-noun-table rt {
+  #tableArea table.adjective-noun-table .adjective-noun-reading {
     display: block; position: absolute; bottom: 100%; left: 50%;
     transform: translateX(-50%); white-space: nowrap !important; text-align: center;
     word-break: keep-all; overflow-wrap: normal; line-height: 1;
+    font-size: 0.58em; font-weight: normal; color: #777;
   }
   .adjective-noun-plus { color: #efb8ce; }
   .adjective-noun-word { display: inline-block; position: relative; }
@@ -6651,11 +6652,11 @@ function replaceConjugationVariants(value) {
 
 function getCellKanjiReadingMap(cell) {
   const readings = new Map();
-  cell.querySelectorAll("ruby").forEach(ruby => {
+  cell.querySelectorAll("ruby, .adjective-noun-ruby").forEach(ruby => {
     const copy = ruby.cloneNode(true);
-    copy.querySelectorAll("rt").forEach(node => node.remove());
+    copy.querySelectorAll("rt, .adjective-noun-reading").forEach(node => node.remove());
     const kanji = normalizeSpeechText(copy.textContent);
-    const reading = normalizeSpeechText(Array.from(ruby.querySelectorAll(":scope > rt"))
+    const reading = normalizeSpeechText(Array.from(ruby.querySelectorAll(":scope > rt, :scope > .adjective-noun-reading"))
       .map(rt => rt.textContent)
       .join(""));
     if (kanji && reading && kanji !== reading) readings.set(kanji, reading);
@@ -6773,20 +6774,20 @@ function isSpeechAnswerCorrect(transcript, answers, kanjiReadingMap = [], isConj
 
 function getCellAnswerText(cell) {
   const copy = cell.cloneNode(true);
-  copy.querySelectorAll("rt, .answer-mask-cover, .reason-kara-note, .adjective-noun-meaning").forEach(node => node.remove());
+  copy.querySelectorAll("rt, .adjective-noun-reading, .answer-mask-cover, .reason-kara-note, .adjective-noun-meaning").forEach(node => node.remove());
   return copy.textContent.trim();
 }
 
 function getCellAnswerReading(cell) {
   const copy = cell.cloneNode(true);
   copy.querySelectorAll(".answer-mask-cover, .reason-kara-note, .adjective-noun-meaning").forEach(node => node.remove());
-  copy.querySelectorAll("ruby").forEach(ruby => {
-    const reading = Array.from(ruby.querySelectorAll(":scope > rt"))
+  copy.querySelectorAll("ruby, .adjective-noun-ruby").forEach(ruby => {
+    const reading = Array.from(ruby.querySelectorAll(":scope > rt, :scope > .adjective-noun-reading"))
       .map(rt => rt.textContent)
       .join("");
     if (reading) ruby.replaceWith(document.createTextNode(reading));
   });
-  copy.querySelectorAll("rt").forEach(node => node.remove());
+  copy.querySelectorAll("rt, .adjective-noun-reading").forEach(node => node.remove());
   return copy.textContent.trim();
 }
 
@@ -9048,15 +9049,20 @@ const adjectiveNounChineseMeanings = {
   写真: "照片", 私: "我", 日本: "日本", 大学: "大学"
 };
 
+function adjectiveNounFurigana(word) {
+  return word.replace(/<ruby>(.*?)<rt>(.*?)<\/rt><\/ruby>/g,
+    '<span class="adjective-noun-ruby" data-no-furigana>$1<span class="adjective-noun-reading">$2</span></span>');
+}
+
 function makeAdjectiveNounTable() {
   const translatedWord = word => {
     const plain = word.replace(/<rt>.*?<\/rt>/g, "").replace(/<[^>]+>/g, "");
-    return `<span class="adjective-noun-word">${word}<small class="adjective-noun-meaning" lang="zh" data-no-furigana>${adjectiveNounChineseMeanings[plain]}</small></span>`;
+    return `<span class="adjective-noun-word">${adjectiveNounFurigana(word)}<small class="adjective-noun-meaning" lang="zh" data-no-furigana>${adjectiveNounChineseMeanings[plain]}</small></span>`;
   };
   const rows = adjectiveNounData.map(([first, noun, particle], index) => {
     const group = index === 0 ? "い形容詞" : index === 8 ? "な形容詞" : index === 15 ? "名詞" : "";
     const tag = group ? `<tr class="group-row"><td colspan="2">${group}</td></tr>` : "";
-    return `${tag}<tr data-noun-particle="${particle}"><td>${makeWordCell(`${translatedWord(first)} <span class="adjective-noun-plus">＋</span> ${translatedWord(noun)}`)}</td><td><span class="answer-text">${first}${particle}${noun}です</span></td></tr>`;
+    return `${tag}<tr data-noun-particle="${particle}"><td>${makeWordCell(`${translatedWord(first)} <span class="adjective-noun-plus">＋</span> ${translatedWord(noun)}`)}</td><td><span class="answer-text">${adjectiveNounFurigana(first)}${particle}${adjectiveNounFurigana(noun)}です</span></td></tr>`;
   }).join("");
   document.getElementById("tableArea").innerHTML = `<table class="adjective-noun-table"><tr><th></th><th></th></tr>${rows}</table><div class="scroll-extra-y"></div>`;
 }
@@ -10522,7 +10528,7 @@ function getVisibleTextLength(el) {
   if (!el) return 0;
 
   const clone = el.cloneNode(true);
-  clone.querySelectorAll("rt, .answer-mask-cover").forEach(node => node.remove());
+  clone.querySelectorAll("rt, .adjective-noun-reading, .answer-mask-cover").forEach(node => node.remove());
   const text = (clone.textContent || "").replace(/\s+/g, "").trim();
   return Array.from(text).length;
 }
