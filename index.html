@@ -7785,7 +7785,17 @@ function makeTestTable() {
   const isConnect = currentTableType === "つなぐ";
 
   const questionLimit = currentSection === "conversation" || currentTableType === "形＋名" ? rows.length : Math.min(15, rows.length);
-  const selected = shuffleArray(rows).slice(0, questionLimit).map(row => {
+  let selectedRows;
+  if (["形-ない", "形くない"].includes(currentTableType)) {
+    const firstThree = shuffleArray(rows.filter(row => row.dataset.adjectiveGroup === "i")).slice(0, 3);
+    const required = rows.filter(row => ["きれい", "学生", "雨"].includes(row.dataset.dictionaryWord));
+    const others = rows.filter(row => row.dataset.adjectiveGroup !== "noun" && !firstThree.includes(row) && !required.includes(row));
+    const remaining = shuffleArray(others).slice(0, questionLimit - firstThree.length - required.length);
+    selectedRows = [...firstThree, ...shuffleArray([...required, ...remaining])];
+  } else {
+    selectedRows = shuffleArray(rows).slice(0, questionLimit);
+  }
+  const selected = selectedRows.map(row => {
     const answerCell = row.cells[row.cells.length - 1];
     return {
       row,
@@ -9020,7 +9030,7 @@ function makeAdjectiveTable(rightTitle, answerIndex) {
 
   adjectiveIBaseData.forEach(row => {
     html += `
-      <tr>
+      <tr data-adjective-group="i" data-dictionary-word="${row[0].replace(/<rt>.*?<\/rt>/g, "").replace(/<[^>]+>/g, "")}">
         <td>${wordCell(row[0])}</td>
         <td><span class="answer-text">${row[answerIndex]}</span></td>
       </tr>
@@ -9035,7 +9045,7 @@ function makeAdjectiveTable(rightTitle, answerIndex) {
 
   adjectiveNaBaseData.forEach(row => {
     html += `
-      <tr>
+      <tr data-adjective-group="na" data-dictionary-word="${row[0].replace(/<rt>.*?<\/rt>/g, "").replace(/<[^>]+>/g, "")}">
         <td>${wordCell(row[0])}</td>
         <td><span class="answer-text">${row[answerIndex]}</span></td>
       </tr>
@@ -9050,7 +9060,7 @@ function makeAdjectiveTable(rightTitle, answerIndex) {
 
   nounBaseData.forEach(row => {
     html += `
-      <tr>
+      <tr data-adjective-group="noun" data-dictionary-word="${row[0].replace(/<rt>.*?<\/rt>/g, "").replace(/<[^>]+>/g, "")}">
         <td>${wordCell(row[0])}</td>
         <td><span class="answer-text">${row[answerIndex]}</span></td>
       </tr>
