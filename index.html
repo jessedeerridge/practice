@@ -988,6 +988,13 @@
 
   #tableArea table.adjective-noun-table { min-width: 560px; }
   .table-wrap:has(.adjective-noun-table) { overflow-x: auto; }
+  #tableArea table.adjective-noun-table ruby {
+    display: inline-block; position: relative; vertical-align: baseline;
+  }
+  #tableArea table.adjective-noun-table rt {
+    display: block; position: absolute; bottom: 100%; left: 50%;
+    transform: translateX(-50%); white-space: nowrap; text-align: center;
+  }
   .adjective-noun-plus { color: #efb8ce; }
   .adjective-noun-word { display: inline-block; position: relative; }
   .adjective-noun-meaning {
@@ -10520,6 +10527,7 @@ function updateTableAlignmentClasses(table) {
 }
 
 function applyTableModeClasses(table) {
+  table.classList.toggle("adjective-noun-table", currentTableType === "形＋名");
   const isConjugationTable = currentSection === "conjugation" || !nonConjugationQuestionTypes.has(currentTableType);
   table.classList.toggle("conjugation-table", isConjugationTable);
   table.classList.toggle("tara-conjugation-table", table.classList.contains("test-table") && ["Vたら", "たら"].includes(currentTableType));
