@@ -9061,7 +9061,9 @@ function adjectiveNounFurigana(word) {
 function makeAdjectiveNounTable() {
   const translatedWord = word => {
     const plain = word.replace(/<rt>.*?<\/rt>/g, "").replace(/<[^>]+>/g, "");
-    return `<span class="adjective-noun-word">${adjectiveNounFurigana(word)}<small class="adjective-noun-meaning" lang="zh" data-no-furigana>${adjectiveNounChineseMeanings[plain]}</small></span>`;
+    const omitMeaning = ["高い", "山", "海", "大きい", "長い", "お寺", "新しい", "小さい", "緑が多い", "人が多い", "有名", "日本", "大学"].includes(plain.replace(/\s/g, ""));
+    const meaning = omitMeaning ? "" : `<small class="adjective-noun-meaning" lang="zh" data-no-furigana>${adjectiveNounChineseMeanings[plain]}</small>`;
+    return `<span class="adjective-noun-word">${adjectiveNounFurigana(word)}${meaning}</span>`;
   };
   const rows = adjectiveNounData.map(([first, noun, particle], index) => {
     const group = index === 0 ? "い形容詞"
