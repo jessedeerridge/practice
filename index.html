@@ -6865,7 +6865,8 @@ function closeTestLikePopup() {
 }
 
 function getTestDurationSeconds(questions) {
-  if (currentSection === "conjugation" && ["形-ない", "形くない", "形＋名"].includes(currentTableType)) return 90;
+  if (currentSection === "conjugation" && currentTableType === "形＋名") return 102;
+  if (currentSection === "conjugation" && ["形-ない", "形くない"].includes(currentTableType)) return 90;
   if (currentSection === "vocab" && hasVocabularyChallenge(currentTableType)) return currentTableType === "動詞" ? 150 : 120;
   if (usesPieceAnswers()) {
     const extraSeconds = currentSection === "conjugation" ? 30
