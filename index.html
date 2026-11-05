@@ -986,8 +986,8 @@
     padding-right: 30px;
   }
 
-  #tableArea table.adjective-noun-table { min-width: 560px; }
-  .table-wrap:has(.adjective-noun-table) { overflow-x: auto; }
+  #tableArea table.adjective-noun-table:not(.test-table) { min-width: 560px; }
+  .table-wrap:has(.adjective-noun-table:not(.test-table)) { overflow-x: auto; }
   #tableArea table.adjective-noun-table .adjective-noun-ruby {
     display: inline-flex; position: relative; vertical-align: baseline; align-items: baseline;
   }
