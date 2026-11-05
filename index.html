@@ -1003,6 +1003,12 @@
     white-space: nowrap; pointer-events: none;
   }
 
+  .adjective-exception-initial { position: relative; }
+  .adjective-exception-initial::before {
+    content: "★"; position: absolute; left: -0.55em; top: -0.65em;
+    font-size: 0.5em; line-height: 1; color: #4099e8; pointer-events: none;
+  }
+
   .adjective-meaning { font-size: 0.6em; font-weight: normal; margin-left: 0.3em; color: #999; }
 
   .question-box {
@@ -7812,7 +7818,8 @@ function makeTestTable() {
   const isConjugation = currentSection === "conjugation";
   const isConnect = currentTableType === "つなぐ";
 
-  const questionLimit = currentSection === "conversation" || currentTableType === "形＋名" ? rows.length : Math.min(15, rows.length);
+  const questionLimit = currentSection === "conversation" || currentTableType === "形＋名"
+    ? rows.length : Math.min(currentSection === "vocab" && currentTableType === "動詞" ? 20 : 15, rows.length);
   let selectedRows;
   if (["形-ない", "形くない"].includes(currentTableType)) {
     const eligible = rows.filter(row => row.dataset.dictionaryWord !== "かっこいい");
@@ -9058,8 +9065,10 @@ function makeAdjectiveTable(rightTitle, answerIndex) {
   const wordCell = word => {
     const plainWord = word.replace(/<rt>.*?<\/rt>/g, "").replace(/<[^>]+>/g, "");
     const meaning = answerIndex >= 2 ? adjectiveChineseMeanings[plainWord] : "";
-    const cell = makeWordCell(word);
-    return meaning ? cell.replace('</span>', `<small class="adjective-meaning" lang="zh-CN" data-no-furigana>（${meaning}）</small></span>`) : cell;
+    const markedWord = answerIndex === 3 && ["いい", "かっこいい"].includes(plainWord)
+      ? `<span class="adjective-exception-initial">${word[0]}</span>${word.slice(1)}` : word;
+    const translation = meaning ? `<small class="adjective-meaning" lang="zh-CN" data-no-furigana>（${meaning}）</small>` : "";
+    return makeWordCell(markedWord + translation);
   };
   let html = `
     <table>
