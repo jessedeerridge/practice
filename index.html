@@ -986,6 +986,8 @@
     padding-right: 30px;
   }
 
+  #tableArea table.adjective-noun-table { min-width: 560px; }
+  .table-wrap:has(.adjective-noun-table) { overflow-x: auto; }
   .adjective-noun-plus { color: #efb8ce; }
   .adjective-noun-word { display: inline-block; position: relative; }
   .adjective-noun-meaning {
@@ -9029,7 +9031,7 @@ function makeAdjectiveNounTable() {
     const tag = group ? `<tr class="group-row"><td colspan="2">${group}</td></tr>` : "";
     return `${tag}<tr data-noun-particle="${particle}"><td>${makeWordCell(`${translatedWord(first)} <span class="adjective-noun-plus">＋</span> ${translatedWord(noun)}`)}</td><td><span class="answer-text">${first}${particle}${noun}です</span></td></tr>`;
   }).join("");
-  document.getElementById("tableArea").innerHTML = `<table><tr><th>A＋B</th><th>形＋名</th></tr>${rows}</table><div class="scroll-extra-y"></div>`;
+  document.getElementById("tableArea").innerHTML = `<table class="adjective-noun-table"><tr><th></th><th></th></tr>${rows}</table><div class="scroll-extra-y"></div>`;
 }
 
 const adjectiveChineseMeanings = {
@@ -10899,10 +10901,13 @@ function fitChallengeColumns(table) {
 function fitTableTextOneLine() {
   const table = document.querySelector("#tableArea table");
   if (!table) return;
+  const meanings = table.querySelectorAll(".adjective-noun-meaning");
+  meanings.forEach(el => { el.style.display = "none"; });
   if (table.classList.contains("test-table")) {
     applyTableModeClasses(table);
     fitChallengeColumns(table);
     fitTaraHintLines(table);
+    meanings.forEach(el => { el.style.removeProperty("display"); });
     return;
   }
 
@@ -10964,6 +10969,11 @@ function fitTableTextOneLine() {
   };
 
   resetFont();
+  if (currentTableType === "形＋名") {
+    table.classList.remove("fitting-table");
+    meanings.forEach(el => { el.style.removeProperty("display"); });
+    return;
+  }
   updateListenPromptBreaks(table);
 
   let size = maxFont;
@@ -11004,6 +11014,7 @@ function fitTableTextOneLine() {
   table.classList.remove("fitting-table");
   table.classList.toggle("tight-table", size < maxFont || hasCellShrink);
   updateTableAlignmentClasses(table);
+  meanings.forEach(el => { el.style.removeProperty("display"); });
 }
 function adjustScrollExtraHeight() {
   const extra = document.querySelector(".scroll-extra-y");
