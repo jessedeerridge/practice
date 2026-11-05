@@ -2718,7 +2718,7 @@
       <button class="menu-btn basic-verb-btn" data-achievement-mode="Vよう" onclick="showTable('Vよう')">Vよう</button>
       <button class="menu-btn basic-verb-btn" data-achievement-mode="V可能" onclick="showTable('V可能')">V可能</button>
       <button class="menu-btn basic-adjective-btn" data-achievement-mode="形-ない" onclick="showTable('形-ない')">形ない</button>
-      <button class="menu-btn basic-adjective-btn" type="button" disabled aria-label="形＋名（準備中）">形＋名</button>
+      <button class="menu-btn basic-adjective-btn" data-achievement-mode="形＋名" onclick="showTable('形＋名')">形＋名</button>
       <button class="menu-btn basic-adjective-btn" data-achievement-mode="形-た" onclick="showTable('形-た')">形た</button>
       <button class="menu-btn basic-adjective-btn" data-achievement-mode="形-なかった" onclick="showTable('形-なかった')">形なかった</button>
       <button class="menu-btn" data-achievement-mode="とき" onclick="showTable('とき')">とき</button>
@@ -3236,6 +3236,12 @@ function toConjugationHiragana(value) {
 function makeConjugationPieces(row, answerReading) {
   const dictionary = toConjugationHiragana(getCellAnswerReading(row.cells[0])).replace(/^\?+/, "");
   const answer = toConjugationHiragana(answerReading);
+  if (currentTableType === "形＋名") {
+    const [first, noun] = dictionary.split("＋");
+    const particle = row.dataset.nounParticle || "";
+    const words = [first, particle, noun].filter(Boolean);
+    return { words, choices: [...new Set([first, "な", "の", noun])], answer, stem: "" };
+  }
   const preselectIntro = pieces => {
     const source = row.cells[0].querySelector(".word-text") || row.cells[0];
     const chunks = getCellAnswerReading(source).trim().split(/\s+/);
@@ -4290,7 +4296,7 @@ function hasDatabaseConversationClear(topic) {
 }
 
 function isBasicConjugationUnlocked(type) {
-  if (["Vます", "Vて", "形-た", "形-ない", "形-なかった"].includes(type)) return true;
+  if (["Vます", "Vて", "形-た", "形-ない", "形-なかった", "形＋名"].includes(type)) return true;
   const requirements = { "形-ない": "大学生活", "形-た": "私の町", "形-なかった": "私の町", "Vて": "一緒に", "Vませんか": "休みの日", "Vましょうか": "一緒に" };
   return !!requirements[type] && hasDatabaseConversationClear(requirements[type]);
 }
@@ -7778,7 +7784,7 @@ function makeTestTable() {
   const isConjugation = currentSection === "conjugation";
   const isConnect = currentTableType === "つなぐ";
 
-  const questionLimit = currentSection === "conversation" ? rows.length : Math.min(15, rows.length);
+  const questionLimit = currentSection === "conversation" || currentTableType === "形＋名" ? rows.length : Math.min(15, rows.length);
   const selected = shuffleArray(rows).slice(0, questionLimit).map(row => {
     const answerCell = row.cells[row.cells.length - 1];
     return {
@@ -8478,6 +8484,8 @@ function showTable(type, focusKey = "") {
     makeAdjectiveKunaiTable();
   } else if (type === "形-なかった") {
     makeAdjectiveKunakattaTable();
+  } else if (type === "形＋名") {
+    makeAdjectiveNounTable();
   } else if (type === "形-なる") {
     makeAdjectiveNaruTable();
   } else if (type === "とき") {
@@ -8962,6 +8970,22 @@ function makeAdjectiveNaruTable() {
     ],
     "辞書形"
   );
+}
+
+const adjectiveNounData = [
+  ["<ruby>高<rt>たか</rt></ruby>い", "<ruby>山<rt>やま</rt></ruby>", ""], ["<ruby>大<rt>おお</rt></ruby>きい", "<ruby>海<rt>うみ</rt></ruby>", ""], ["<ruby>長<rt>なが</rt></ruby>い", "<ruby>川<rt>かわ</rt></ruby>", ""],
+  ["ふるい", "お<ruby>寺<rt>てら</rt></ruby>", ""], ["おおきい", "たてもの", ""], ["<ruby>新<rt>あたら</rt></ruby>しい", "スマホ", ""],
+  ["いい", "ところ", ""], ["<ruby>小<rt>ちい</rt></ruby>さい", "<ruby>町<rt>まち</rt></ruby>", ""],
+  ["にぎやか", "<ruby>町<rt>まち</rt></ruby>", "な"], ["しずか", "ところ", "な"], ["きれい", "<ruby>山<rt>やま</rt></ruby>", "な"],
+  ["<ruby>有名<rt>ゆうめい</rt></ruby>", "<ruby>建物<rt>たてもの</rt></ruby>", "な"], ["<ruby>元気<rt>げんき</rt></ruby>", "<ruby>人<rt>ひと</rt></ruby>", "な"], ["<ruby>好<rt>す</rt></ruby>き", "<ruby>料理<rt>りょうり</rt></ruby>", "な"], ["きらい", "<ruby>料理<rt>りょうり</rt></ruby>", "な"],
+  ["<ruby>町<rt>まち</rt></ruby>", "<ruby>写真<rt>しゃしん</rt></ruby>", "の"], ["<ruby>私<rt>わたし</rt></ruby>", "スマホ", "の"], ["<ruby>日本<rt>にほん</rt></ruby>", "<ruby>大学<rt>だいがく</rt></ruby>", "の"]
+];
+
+function makeAdjectiveNounTable() {
+  const rows = adjectiveNounData.map(([first, noun, particle]) =>
+    `<tr data-noun-particle="${particle}"><td>${makeWordCell(`${first}＋${noun}`)}</td><td><span class="answer-text">${first}${particle}${noun}</span></td></tr>`
+  ).join("");
+  document.getElementById("tableArea").innerHTML = `<table><tr><th>A＋B</th><th>形＋名</th></tr>${rows}</table><div class="scroll-extra-y"></div>`;
 }
 
 const adjectiveChineseMeanings = {
