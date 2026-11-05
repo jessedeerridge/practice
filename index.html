@@ -986,8 +986,6 @@
     padding-right: 30px;
   }
 
-  #tableArea table.adjective-noun-table:not(.test-table) { min-width: 560px; }
-  .table-wrap:has(.adjective-noun-table:not(.test-table)) { overflow-x: auto; }
   #tableArea table.adjective-noun-table .adjective-noun-ruby {
     display: inline-flex; position: relative; vertical-align: baseline; align-items: baseline;
   }
@@ -2679,6 +2677,10 @@
   #tableArea table.test-table .balanced-challenge-hint { display:block; white-space:nowrap !important; }
   #tableArea table.test-table .balanced-challenge-line { display:block; width:max-content; max-width:100%; margin-inline:auto; white-space:nowrap; }
   #tableArea table.connect-piece-table .balanced-challenge-line + .balanced-challenge-line { margin-left:1em; }
+
+  #tableArea table.adjective-noun-table:not(.test-table) tr.compact-noun-prompt td:first-child { padding: 0; }
+  #tableArea table.adjective-noun-table:not(.test-table) tr.compact-noun-prompt .word-cell-inner { gap: 0; }
+  #tableArea table.adjective-noun-table:not(.test-table) tr.compact-noun-prompt .word-text { padding: 0; }
 
 </style>
 </head>
@@ -11017,6 +11019,11 @@ function fitTableTextOneLine() {
   resetFont();
   if (currentTableType === "形＋名") {
     table.classList.remove("fitting-table");
+    table.querySelectorAll("tr[data-noun-particle]").forEach(row => {
+      row.classList.remove("compact-noun-prompt");
+      const text = row.querySelector(".word-text");
+      if (text.scrollWidth > text.clientWidth || leftTextUsesMoreThanTwoLines(text)) row.classList.add("compact-noun-prompt");
+    });
     meanings.forEach(el => { el.style.removeProperty("display"); });
     return;
   }
