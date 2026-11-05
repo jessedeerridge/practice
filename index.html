@@ -5917,6 +5917,7 @@ let speechInputFallbackMismatchTimer = null;
 let speechInputFallbackCompositionTimer = null;
 let testCountdownTimer = null;
 let testCountdownDeadline = 0;
+let testCountdownStartedAt = 0;
 let testInputMode = "";
 let testSessionEnded = false;
 let testResultSaved = false;
@@ -6121,6 +6122,9 @@ function saveTestResult(percent, reason, achievedAt = Date.now()) {
   if (!name) return;
   const info = getTestModeInfo();
   const result = { id: `${achievedAt}_${Math.random().toString(36).slice(2,8)}`, name, mode: info.mode, conjugation: info.conjugation, homeLevel: currentHomeLevel, percent: Math.round(percent), reason, achievedAt };
+  if (reason === "complete" && testCountdownStartedAt > 0 && achievedAt >= testCountdownStartedAt) {
+    result.elapsedMs = achievedAt - testCountdownStartedAt;
+  }
   const results = readTestStorage(TEST_RESULTS_STORAGE_KEY, []);
   results.push(result);
   writeTestStorage(TEST_RESULTS_STORAGE_KEY, results.slice(-500));
@@ -6902,7 +6906,8 @@ function formatTestDuration(seconds) {
 function startTestCountdown() {
   clearTestCountdown(false);
   const durationSeconds = getTestDurationSeconds(Array.from(document.querySelectorAll("#tableArea .test-answer-button")));
-  testCountdownDeadline = Date.now() + durationSeconds * 1000;
+  testCountdownStartedAt = Date.now();
+  testCountdownDeadline = testCountdownStartedAt + durationSeconds * 1000;
   updateTestCountdown();
   testCountdownTimer = setInterval(updateTestCountdown, 250);
 }
