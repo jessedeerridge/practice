@@ -9034,6 +9034,8 @@ const adjectiveNounData = [
   ["<ruby>高<rt>たか</rt></ruby>い", "<ruby>山<rt>やま</rt></ruby>", ""], ["<ruby>大<rt>おお</rt></ruby>きい", "<ruby>海<rt>うみ</rt></ruby>", ""], ["<ruby>長<rt>なが</rt></ruby>い", "<ruby>川<rt>かわ</rt></ruby>", ""],
   ["ふるい", "お<ruby>寺<rt>てら</rt></ruby>", ""], ["<ruby>大<rt>おお</rt></ruby>きい", "たてもの", ""], ["<ruby>新<rt>あたら</rt></ruby>しい", "スマホ", ""],
   ["いい", "ところ", ""], ["<ruby>小<rt>ちい</rt></ruby>さい", "<ruby>町<rt>まち</rt></ruby>", ""],
+  ["<ruby>緑<rt>みどり</rt></ruby>が<ruby>多<rt>おお</rt></ruby>い", "まち", ""],
+  ["<ruby>人<rt>ひと</rt></ruby>が<ruby>多<rt>おお</rt></ruby>い", "まち", ""],
   ["にぎやか", "<ruby>町<rt>まち</rt></ruby>", "な"], ["しずか", "ところ", "な"], ["きれい", "<ruby>山<rt>やま</rt></ruby>", "な"],
   ["<ruby>有名<rt>ゆうめい</rt></ruby>", "<ruby>建物<rt>たてもの</rt></ruby>", "な"], ["<ruby>元気<rt>げんき</rt></ruby>", "<ruby>人<rt>ひと</rt></ruby>", "な"], ["<ruby>好<rt>す</rt></ruby>き", "<ruby>料理<rt>りょうり</rt></ruby>", "な"], ["きらい", "<ruby>料理<rt>りょうり</rt></ruby>", "な"],
   ["<ruby>町<rt>まち</rt></ruby>", "<ruby>写真<rt>しゃしん</rt></ruby>", "の"], ["<ruby>私<rt>わたし</rt></ruby>", "スマホ", "の"], ["<ruby>日本<rt>にほん</rt></ruby>", "<ruby>大学<rt>だいがく</rt></ruby>", "の"]
@@ -9046,7 +9048,8 @@ const adjectiveNounChineseMeanings = {
   小さい: "小的", 町: "城镇", にぎやか: "热闹的", しずか: "安静的",
   きれい: "漂亮的", 有名: "有名的", 建物: "建筑物", 元気: "有精神的",
   人: "人", 好き: "喜欢的", 料理: "菜肴", きらい: "讨厌的",
-  写真: "照片", 私: "我", 日本: "日本", 大学: "大学"
+  写真: "照片", 私: "我", 日本: "日本", 大学: "大学",
+  緑が多い: "绿化多的", 人が多い: "人多的", まち: "城镇"
 };
 
 function adjectiveNounFurigana(word) {
@@ -9060,7 +9063,8 @@ function makeAdjectiveNounTable() {
     return `<span class="adjective-noun-word">${adjectiveNounFurigana(word)}<small class="adjective-noun-meaning" lang="zh" data-no-furigana>${adjectiveNounChineseMeanings[plain]}</small></span>`;
   };
   const rows = adjectiveNounData.map(([first, noun, particle], index) => {
-    const group = index === 0 ? "い形容詞" : index === 8 ? "な形容詞" : index === 15 ? "名詞" : "";
+    const group = index === 0 ? "い形容詞"
+      : particle !== adjectiveNounData[index - 1][2] ? (particle === "な" ? "な形容詞" : "名詞") : "";
     const tag = group ? `<tr class="group-row"><td colspan="2">${group}</td></tr>` : "";
     return `${tag}<tr data-noun-particle="${particle}"><td>${makeWordCell(`${translatedWord(first)} <span class="adjective-noun-plus">＋</span> ${translatedWord(noun)}`)}</td><td><span class="answer-text">${adjectiveNounFurigana(first)}${particle}${adjectiveNounFurigana(noun)}です</span></td></tr>`;
   }).join("");
@@ -9068,7 +9072,7 @@ function makeAdjectiveNounTable() {
 }
 
 const adjectiveChineseMeanings = {
-  新しい: "新的", 古い: "旧的", 高い: "高的／贵的", 安い: "便宜的",
+  新しい: "新的", 古い: "旧的", 高い: "高的／贵的", 安い: "便宜的", 多い: "多的",
   大きい: "大的", 小さい: "小的", 暑い: "热的", 寒い: "冷的",
   熱い: "烫的", 冷たい: "冰凉的", 難しい: "难的", やさしい: "简单的",
   おいしい: "好吃的", 忙しい: "忙的", 楽しい: "开心的", 早い: "早的",
@@ -9099,7 +9103,10 @@ function makeAdjectiveTable(rightTitle, answerIndex) {
       </tr>
   `;
 
-  adjectiveIBaseData.forEach(row => {
+  const iAdjectives = answerIndex === 3
+    ? [...adjectiveIBaseData, ["<ruby>多<rt>おお</rt></ruby>い", "", "", "<ruby>多<rt>おお</rt></ruby>くないです"]]
+    : adjectiveIBaseData;
+  iAdjectives.forEach(row => {
     html += `
       <tr data-adjective-group="i" data-dictionary-word="${row[0].replace(/<rt>.*?<\/rt>/g, "").replace(/<[^>]+>/g, "")}">
         <td>${wordCell(row[0])}</td>
