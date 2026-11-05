@@ -986,6 +986,8 @@
     padding-right: 30px;
   }
 
+  .adjective-noun-plus { color: #efb8ce; }
+
   .adjective-meaning { font-size: 0.6em; font-weight: normal; margin-left: 0.3em; color: #999; }
 
   .question-box {
@@ -9005,7 +9007,7 @@ function makeAdjectiveNounTable() {
   const rows = adjectiveNounData.map(([first, noun, particle], index) => {
     const group = index === 0 ? "い形容詞" : index === 8 ? "な形容詞" : index === 15 ? "名詞" : "";
     const tag = group ? `<tr class="group-row"><td colspan="2">${group}</td></tr>` : "";
-    return `${tag}<tr data-noun-particle="${particle}"><td>${makeWordCell(`${first}＋${noun}`)}</td><td><span class="answer-text">${first}${particle}${noun}です</span></td></tr>`;
+    return `${tag}<tr data-noun-particle="${particle}"><td>${makeWordCell(`${first} <span class="adjective-noun-plus">＋</span> ${noun}`)}</td><td><span class="answer-text">${first}${particle}${noun}です</span></td></tr>`;
   }).join("");
   document.getElementById("tableArea").innerHTML = `<table><tr><th>A＋B</th><th>形＋名</th></tr>${rows}</table><div class="scroll-extra-y"></div>`;
 }
