@@ -7815,9 +7815,10 @@ function makeTestTable() {
   const questionLimit = currentSection === "conversation" || currentTableType === "形＋名" ? rows.length : Math.min(15, rows.length);
   let selectedRows;
   if (["形-ない", "形くない"].includes(currentTableType)) {
-    const firstThree = shuffleArray(rows.filter(row => row.dataset.adjectiveGroup === "i")).slice(0, 3);
-    const required = rows.filter(row => ["きれい", "学生", "雨"].includes(row.dataset.dictionaryWord));
-    const others = rows.filter(row => row.dataset.adjectiveGroup !== "noun" && !firstThree.includes(row) && !required.includes(row));
+    const eligible = rows.filter(row => row.dataset.dictionaryWord !== "かっこいい");
+    const firstThree = shuffleArray(eligible.filter(row => row.dataset.adjectiveGroup === "i")).slice(0, 3);
+    const required = eligible.filter(row => ["いい", "きれい", "学生", "雨"].includes(row.dataset.dictionaryWord) && !firstThree.includes(row));
+    const others = eligible.filter(row => row.dataset.adjectiveGroup !== "noun" && !firstThree.includes(row) && !required.includes(row));
     const remaining = shuffleArray(others).slice(0, questionLimit - firstThree.length - required.length);
     selectedRows = [...firstThree, ...shuffleArray([...required, ...remaining])];
   } else {
@@ -7870,7 +7871,7 @@ function makeTestTable() {
     return `<tr><td>${prompt.innerHTML}</td><td class="test-answer-cell"><button class="test-answer-button" type="button" data-answer="${escapeHtml(answer)}" data-answer-font-size="${escapeHtml(answerFontSize)}" data-word-answer="${escapeHtml(row.dataset.wordAnswer || "")}" data-stem-piece="${escapeHtml(row.dataset.stemPiece || "")}" data-answer-reading="${escapeHtml(answerReading)}" data-accepted-answers="${escapeHtml(acceptedAnswers)}" data-kanji-reading-map="${escapeHtml(JSON.stringify(kanjiReadingMap))}" data-conversation="${Boolean(conversationPracticeData[currentTableType])}" data-flexible-adverbs="${["聞く", "話す"].includes(currentTableType)}" data-optional-topic="${currentTableType === "話す" && /^(?:あした|ねんまつ)は/.test(normalizeSpeechText(answerReading))}" data-conjugation="${isConjugation}" data-connect="${isConnect}" data-selected="false" aria-pressed="false" onclick="startSpeechTest(this)" aria-label="${index + 1}問目を音声で答える"><span class="test-transcript"></span><span class="test-status"></span></button>${wordBank}</td></tr>`;
   }).join("");
   const timer = `<button class="test-timer-btn" id="testTimerBtn" type="button" aria-label="タイマー">${formatTestDuration(getTestDurationSeconds(selected.map(({ row }) => row)))}</button>`;
-  document.getElementById("tableArea").innerHTML = `<table class="test-table${isConnect ? " connect-piece-table" : ""}"><tr><th>問題</th><th>あなたの答え</th></tr>${body}</table><button class="test-reveal-btn" type="button" onclick="revealTestAnswers()">答え</button>${timer}<div class="scroll-extra-y"></div>`;
+  document.getElementById("tableArea").innerHTML = `<table class="test-table${isConnect ? " connect-piece-table" : ""}${currentTableType === "形＋名" ? " adjective-noun-table" : ""}"><tr><th>問題</th><th>あなたの答え</th></tr>${body}</table><button class="test-reveal-btn" type="button" onclick="revealTestAnswers()">答え</button>${timer}<div class="scroll-extra-y"></div>`;
   document.querySelectorAll("#tableArea .conversation-word-bank").forEach((bank, index) => {
     bank.dataset.taraComma = String(["Vたら", "たら"].includes(currentTableType));
     bank.dataset.tariComma = String(["Vたり", "たり"].includes(currentTableType));
