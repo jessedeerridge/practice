@@ -3491,6 +3491,16 @@ function makeConjugationPieces(row, answerReading) {
     const extras = iAdjective ? ["い", "く"] : ["かった", "です", "く"];
     return { words, choices: [...words, ...extras], answer, stem };
   }
+  if (["形-ない", "形くない"].includes(currentTableType) && ["きれいじゃないです", "きらいじゃないです"].includes(answer)) {
+    const adjective = answer.slice(0, -6);
+    const shortStem = adjective.slice(0, -1);
+    return {
+      words: [adjective, "じゃ", "ないです"],
+      choices: [adjective, shortStem, "い", "じゃ", "く", "ないです"],
+      acceptedAnswers: [`${shortStem} い じゃ ないです`],
+      answer, stem: ""
+    };
+  }
   if (["形-ない", "形くない", "形-なかった", "形-なる"].includes(currentTableType)) {
     const past = currentTableType === "形-なかった";
     const naru = currentTableType === "形-なる";
