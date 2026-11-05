@@ -987,6 +987,12 @@
   }
 
   .adjective-noun-plus { color: #efb8ce; }
+  .adjective-noun-word { display: inline-block; position: relative; }
+  .adjective-noun-meaning {
+    position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+    font-size: 0.55em; line-height: 1; font-weight: normal; color: #999;
+    white-space: nowrap; pointer-events: none;
+  }
 
   .adjective-meaning { font-size: 0.6em; font-weight: normal; margin-left: 0.3em; color: #999; }
 
@@ -6741,13 +6747,13 @@ function isSpeechAnswerCorrect(transcript, answers, kanjiReadingMap = [], isConj
 
 function getCellAnswerText(cell) {
   const copy = cell.cloneNode(true);
-  copy.querySelectorAll("rt, .answer-mask-cover, .reason-kara-note").forEach(node => node.remove());
+  copy.querySelectorAll("rt, .answer-mask-cover, .reason-kara-note, .adjective-noun-meaning").forEach(node => node.remove());
   return copy.textContent.trim();
 }
 
 function getCellAnswerReading(cell) {
   const copy = cell.cloneNode(true);
-  copy.querySelectorAll(".answer-mask-cover, .reason-kara-note").forEach(node => node.remove());
+  copy.querySelectorAll(".answer-mask-cover, .reason-kara-note, .adjective-noun-meaning").forEach(node => node.remove());
   copy.querySelectorAll("ruby").forEach(ruby => {
     const reading = Array.from(ruby.querySelectorAll(":scope > rt"))
       .map(rt => rt.textContent)
@@ -9003,11 +9009,25 @@ const adjectiveNounData = [
   ["<ruby>町<rt>まち</rt></ruby>", "<ruby>写真<rt>しゃしん</rt></ruby>", "の"], ["<ruby>私<rt>わたし</rt></ruby>", "スマホ", "の"], ["<ruby>日本<rt>にほん</rt></ruby>", "<ruby>大学<rt>だいがく</rt></ruby>", "の"]
 ];
 
+const adjectiveNounChineseMeanings = {
+  高い: "高的", 山: "山", 大きい: "大的", 海: "海", 長い: "长的", 川: "河",
+  ふるい: "旧的", お寺: "寺庙", おおきい: "大的", たてもの: "建筑物",
+  新しい: "新的", スマホ: "智能手机", いい: "好的", ところ: "地方",
+  小さい: "小的", 町: "城镇", にぎやか: "热闹的", しずか: "安静的",
+  きれい: "漂亮的", 有名: "有名的", 建物: "建筑物", 元気: "有精神的",
+  人: "人", 好き: "喜欢的", 料理: "菜肴", きらい: "讨厌的",
+  写真: "照片", 私: "我", 日本: "日本", 大学: "大学"
+};
+
 function makeAdjectiveNounTable() {
+  const translatedWord = word => {
+    const plain = word.replace(/<rt>.*?<\/rt>/g, "").replace(/<[^>]+>/g, "");
+    return `<span class="adjective-noun-word">${word}<small class="adjective-noun-meaning" lang="zh" data-no-furigana>${adjectiveNounChineseMeanings[plain]}</small></span>`;
+  };
   const rows = adjectiveNounData.map(([first, noun, particle], index) => {
     const group = index === 0 ? "い形容詞" : index === 8 ? "な形容詞" : index === 15 ? "名詞" : "";
     const tag = group ? `<tr class="group-row"><td colspan="2">${group}</td></tr>` : "";
-    return `${tag}<tr data-noun-particle="${particle}"><td>${makeWordCell(`${first} <span class="adjective-noun-plus">＋</span> ${noun}`)}</td><td><span class="answer-text">${first}${particle}${noun}です</span></td></tr>`;
+    return `${tag}<tr data-noun-particle="${particle}"><td>${makeWordCell(`${translatedWord(first)} <span class="adjective-noun-plus">＋</span> ${translatedWord(noun)}`)}</td><td><span class="answer-text">${first}${particle}${noun}です</span></td></tr>`;
   }).join("");
   document.getElementById("tableArea").innerHTML = `<table><tr><th>A＋B</th><th>形＋名</th></tr>${rows}</table><div class="scroll-extra-y"></div>`;
 }
