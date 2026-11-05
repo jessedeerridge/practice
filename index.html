@@ -2678,6 +2678,13 @@
   #tableArea table.test-table .balanced-challenge-line { display:block; width:max-content; max-width:100%; margin-inline:auto; white-space:nowrap; }
   #tableArea table.connect-piece-table .balanced-challenge-line + .balanced-challenge-line { margin-left:1em; }
 
+  #tableArea table.adjective-noun-table:not(.test-table) th:first-child,
+  #tableArea table.adjective-noun-table:not(.test-table) td:first-child { width: 55%; }
+  #tableArea table.adjective-noun-table:not(.test-table) th:last-child,
+  #tableArea table.adjective-noun-table:not(.test-table) td:last-child { width: 45%; }
+  #tableArea table.adjective-noun-table:not(.test-table) .word-text { white-space: nowrap !important; }
+  #tableArea table.adjective-noun-table:not(.test-table) tr.compact-noun-prompt .question-box { width: 20px; height: 20px; flex-basis: 20px; }
+  #tableArea table.adjective-noun-table:not(.test-table) tr.compact-noun-prompt td:last-child { padding-left: 0; }
   #tableArea table.adjective-noun-table:not(.test-table) tr.compact-noun-prompt td:first-child { padding: 0; }
   #tableArea table.adjective-noun-table:not(.test-table) tr.compact-noun-prompt .word-cell-inner { gap: 0; }
   #tableArea table.adjective-noun-table:not(.test-table) tr.compact-noun-prompt .word-text { padding: 0; }
