@@ -3239,8 +3239,8 @@ function makeConjugationPieces(row, answerReading) {
   if (currentTableType === "形＋名") {
     const [first, noun] = dictionary.split("＋");
     const particle = row.dataset.nounParticle || "";
-    const words = [first, particle, noun].filter(Boolean);
-    return { words, choices: [...new Set([first, "な", "の", noun])], answer, stem: "" };
+    const words = [first, particle, noun, "です"].filter(Boolean);
+    return { words, choices: [...new Set([first, "な", "の", noun, "です"])], answer, stem: "" };
   }
   const preselectIntro = pieces => {
     const source = row.cells[0].querySelector(".word-text") || row.cells[0];
@@ -9002,9 +9002,11 @@ const adjectiveNounData = [
 ];
 
 function makeAdjectiveNounTable() {
-  const rows = adjectiveNounData.map(([first, noun, particle]) =>
-    `<tr data-noun-particle="${particle}"><td>${makeWordCell(`${first}＋${noun}`)}</td><td><span class="answer-text">${first}${particle}${noun}</span></td></tr>`
-  ).join("");
+  const rows = adjectiveNounData.map(([first, noun, particle], index) => {
+    const group = index === 0 ? "い形容詞" : index === 8 ? "な形容詞" : index === 15 ? "名詞" : "";
+    const tag = group ? `<tr class="group-row"><td colspan="2">${group}</td></tr>` : "";
+    return `${tag}<tr data-noun-particle="${particle}"><td>${makeWordCell(`${first}＋${noun}`)}</td><td><span class="answer-text">${first}${particle}${noun}です</span></td></tr>`;
+  }).join("");
   document.getElementById("tableArea").innerHTML = `<table><tr><th>A＋B</th><th>形＋名</th></tr>${rows}</table><div class="scroll-extra-y"></div>`;
 }
 
