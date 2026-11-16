@@ -6033,30 +6033,45 @@ function placeAchievementStamps(button, pile, completed) {
   const maxX = Math.max(minX, buttonRect.width - edgeGap - stampSize);
   const minY = edgeGap;
   const maxY = Math.max(minY, buttonRect.height - edgeGap - stampSize);
+  // 回転分の余白を確保し、空いている区画を先に使う。
+  const spacing = stampSize * 1.04 + 3;
+  const columns = Math.floor((maxX - minX) / spacing) + 1;
+  const rows = Math.floor((maxY - minY) / spacing) + 1;
+  const slots = [];
+  for (let row = 0; row < rows; row += 1) {
+    for (let column = 0; column < columns; column += 1) {
+      slots.push({
+        x: columns > 1 ? minX + column * (maxX - minX) / (columns - 1) : (minX + maxX) / 2,
+        y: rows > 1 ? minY + row * (maxY - minY) / (rows - 1) : (minY + maxY) / 2
+      });
+    }
+  }
   const placed = [];
 
   completed.forEach((result, index) => {
     const seed = result.id || `${result.achievedAt}-${index}`;
-    let position = null;
-    for (let attempt = 0; attempt < 80; attempt += 1) {
-      const candidate = {
-        x: minX + getSeededUnit(seed, `x-${attempt}`) * (maxX - minX),
-        y: minY + getSeededUnit(seed, `y-${attempt}`) * (maxY - minY)
-      };
-      const overlaps = placed.some(other =>
-        candidate.x < other.x + stampSize + 2 && candidate.x + stampSize + 2 > other.x &&
-        candidate.y < other.y + stampSize + 2 && candidate.y + stampSize + 2 > other.y
-      );
-      if (!overlaps) {
-        position = candidate;
-        break;
+    let position;
+    if (slots.length) {
+      const slotIndex = Math.min(slots.length - 1, Math.floor(getSeededUnit(seed, "slot") * slots.length));
+      position = slots.splice(slotIndex, 1)[0];
+    } else {
+      // 満杯になってからも、重なる面積が小さい候補を選ぶ。
+      let smallestOverlap = Infinity;
+      for (let attempt = 0; attempt < 80; attempt += 1) {
+        const candidate = {
+          x: minX + getSeededUnit(seed, `x-${attempt}`) * (maxX - minX),
+          y: minY + getSeededUnit(seed, `y-${attempt}`) * (maxY - minY)
+        };
+        const overlap = placed.reduce((total, other) => total +
+          Math.max(0, stampSize * 1.04 - Math.abs(candidate.x - other.x)) *
+          Math.max(0, stampSize * 1.04 - Math.abs(candidate.y - other.y)), 0);
+        if (overlap < smallestOverlap) {
+          smallestOverlap = overlap;
+          position = candidate;
+        }
+        if (overlap === 0) break;
       }
     }
-    // 空きがなくなった後だけ、達成済みシール同士を重ねる。
-    position ||= {
-      x: minX + getSeededUnit(seed, "fallback-x") * (maxX - minX),
-      y: minY + getSeededUnit(seed, "fallback-y") * (maxY - minY)
-    };
     placed.push(position);
 
     const stamp = document.createElement("img");
