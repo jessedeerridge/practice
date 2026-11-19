@@ -71,7 +71,7 @@
     const VOCAB_QUIZ_COLUMNS=Object.freeze(["数字","数え方","月・日付","時間・分","いつ","どこ","位置詞","動詞"].map(mode=>({label:`語彙：${mode}`,mode,conjugation:""})));
     const QUIZ_COLUMNS=Object.freeze([{label:"聞く",mode:"聞く",conjugation:""},{label:"話す",mode:"話す",conjugation:""},{label:"つなぐ",mode:"つなぐ",conjugation:""},...["Vます","Vて","Vた","Vない","Vよう","V可能","形-て","形-た","形-ない","形-なかった","とき","形-なる","Vたいです","Vてください","Vています","Vてきます","Vてもいいですか","Vないでください","Vたことがあります","Vたり","Vたら"].map(label=>({label,mode:"活用",conjugation:label}))]);
     const BASIC_QUIZ_COLUMNS=Object.freeze([
-      ...["自己紹介","買いもの","大学生活","私の町"].map(mode=>({label:`会話：${mode}`,mode,conjugation:""})),
+      ...["自己紹介","買いもの","大学生活","私の町","休みの日","一緒に","友だちの家"].map(mode=>({label:`会話：${mode}`,mode,conjugation:""})),
       ...VOCAB_QUIZ_COLUMNS,
       ...["Vます","Vて","形-た","形-ない","形＋名","形-なかった"].map(conjugation=>({label:`活用：${conjugation}`,mode:"活用",conjugation}))
     ]);
